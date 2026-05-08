@@ -1,30 +1,34 @@
-import { request } from './apiClient'
-import type { Entity } from '../types'
+import type { BusinessEntity } from "../types";
 
-export async function fetchEntities(): Promise<Entity[]> {
-  return request<Entity[]>('/api/schema/tables')
+const API_BASE_URL = "http://localhost:8080/api";
+
+async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${url}`, options);
+
+  if (!response.ok) {
+    throw new Error("The entity service request could not be completed.");
+  }
+
+  return response.json() as Promise<T>;
 }
 
-export async function createEntity(payload: { name: string; description?: string }): Promise<Entity> {
-  return request<Entity>('/api/entities', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
+export type CreateEntityInput = {
+  name: string;
+  description?: string;
+};
+
+export function getEntities(): Promise<BusinessEntity[]> {
+  return request<BusinessEntity[]>("/entities");
 }
 
-export async function fetchEntity(entityId: string): Promise<Entity> {
-  return request<Entity>(`/api/entities/${encodeURIComponent(entityId)}`)
+export function getEntityById(id: string): Promise<BusinessEntity> {
+  return request<BusinessEntity>(`/entities/${id}`);
 }
 
-export async function updateEntity(entityId: string, payload: { name: string; description?: string }): Promise<Entity> {
-  return request<Entity>(`/api/entities/${encodeURIComponent(entityId)}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
-}
-
-export async function deleteEntity(entityId: string): Promise<void> {
-  return request<void>(`/api/entities/${encodeURIComponent(entityId)}`, {
-    method: 'DELETE',
-  })
+export function createEntity(data: CreateEntityInput): Promise<BusinessEntity> {
+  return request<BusinessEntity>("/entities", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 }

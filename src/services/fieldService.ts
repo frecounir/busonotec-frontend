@@ -1,22 +1,31 @@
-import { request } from './apiClient'
-import type { Field } from '../types'
+import type { EntityField } from "../types";
 
-export async function createField(entityId: string, payload: Omit<Field, 'id'>): Promise<Field> {
-  return request<Field>(`/api/entities/${encodeURIComponent(entityId)}/fields`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
+const API_BASE_URL = "http://localhost:8080/api";
+
+async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${url}`, options);
+
+  if (!response.ok) {
+    throw new Error("The field service request could not be completed.");
+  }
+
+  return response.json() as Promise<T>;
 }
 
-export async function updateField(entityId: string, fieldId: string, payload: Omit<Field, 'id'>): Promise<Field> {
-  return request<Field>(`/api/entities/${encodeURIComponent(entityId)}/fields/${encodeURIComponent(fieldId)}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
+export type CreateFieldInput = {
+  name: string;
+  type: string;
+  businessEntityId: string;
+};
+
+export function getFields(entityId: string): Promise<EntityField[]> {
+  return request<EntityField[]>(`/entities/${entityId}/fields`);
 }
 
-export async function deleteField(entityId: string, fieldId: string): Promise<void> {
-  return request<void>(`/api/entities/${encodeURIComponent(entityId)}/fields/${encodeURIComponent(fieldId)}`, {
-    method: 'DELETE',
-  })
+export function createField(data: CreateFieldInput): Promise<EntityField> {
+  return request<EntityField>("/fields", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 }

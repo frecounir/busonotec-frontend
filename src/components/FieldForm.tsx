@@ -1,119 +1,53 @@
-import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
-import type { Field, FieldType } from '../types'
+import { useState } from "react";
+import type { FormEvent } from "react";
+import type { CreateFieldInput } from "../services/fieldService";
 
 type FieldFormProps = {
-  initialField?: Field
-  loading: boolean
-  error?: string
-  onSave: (field: Omit<Field, 'id'>) => void
-  onCancel?: () => void
-}
+  isSubmitting: boolean;
+  onCreate: (data: Omit<CreateFieldInput, "businessEntityId">) => Promise<void>;
+};
 
-const fieldTypes: FieldType[] = ['string', 'number', 'boolean', 'date']
+const fieldTypes = ["string", "number", "boolean", "date"];
 
-export function FieldForm({ initialField, loading, error, onSave, onCancel }: FieldFormProps) {
-  const [name, setName] = useState(initialField?.name ?? '')
-  const [label, setLabel] = useState(initialField?.label ?? '')
-  const [type, setType] = useState<FieldType>(initialField?.type ?? 'string')
-  const [required, setRequired] = useState(initialField?.required ?? false)
-  const [placeholder, setPlaceholder] = useState(initialField?.placeholder ?? '')
+export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
+  const [name, setName] = useState("");
+  const [type, setType] = useState("string");
 
-  useEffect(() => {
-    setName(initialField?.name ?? '')
-    setLabel(initialField?.label ?? '')
-    setType(initialField?.type ?? 'string')
-    setRequired(initialField?.required ?? false)
-    setPlaceholder(initialField?.placeholder ?? '')
-  }, [initialField])
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    onSave({ name, label, type, required, placeholder })
-  }
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await onCreate({ name: name.trim(), type });
+    setName("");
+  };
 
   return (
-    <section className="card">
-      <h2>{initialField ? 'Edit field' : 'Add field'}</h2>
-      <form onSubmit={handleSubmit}>
-        <label className="field-label" htmlFor="field-name">
-          Field name
-        </label>
+    <form className="form-card compact" onSubmit={submit}>
+      <div className="form-row">
+        <label htmlFor="field-name">Name</label>
         <input
           id="field-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="field-input"
-          placeholder="sku"
-          disabled={loading}
+          placeholder="email"
           required
         />
-
-        <label className="field-label" htmlFor="field-label">
-          Label
-        </label>
-        <input
-          id="field-label"
-          value={label}
-          onChange={(event) => setLabel(event.target.value)}
-          className="field-input"
-          placeholder="SKU"
-          disabled={loading}
-          required
-        />
-
-        <label className="field-label" htmlFor="field-type">
-          Type
-        </label>
+      </div>
+      <div className="form-row">
+        <label htmlFor="field-type">Type</label>
         <select
           id="field-type"
           value={type}
-          onChange={(event) => setType(event.target.value as FieldType)}
-          className="field-input"
-          disabled={loading}
+          onChange={(event) => setType(event.target.value)}
         >
-          {fieldTypes.map((option) => (
-            <option key={option} value={option}>
-              {option}
+          {fieldTypes.map((fieldType) => (
+            <option key={fieldType} value={fieldType}>
+              {fieldType}
             </option>
           ))}
         </select>
-
-        <label className="field-label" htmlFor="field-placeholder">
-          Placeholder
-        </label>
-        <input
-          id="field-placeholder"
-          value={placeholder}
-          onChange={(event) => setPlaceholder(event.target.value)}
-          className="field-input"
-          placeholder="Enter helper text"
-          disabled={loading}
-        />
-
-        <label className="checkbox-field">
-          <input
-            type="checkbox"
-            checked={required}
-            onChange={(event) => setRequired(event.target.checked)}
-            disabled={loading}
-          />
-          Required
-        </label>
-
-        {error ? <p className="field-error">{error}</p> : null}
-
-        <div className="button-row">
-          <button type="submit" className="button primary" disabled={loading}>
-            {loading ? 'Saving...' : initialField ? 'Update field' : 'Add field'}
-          </button>
-          {onCancel ? (
-            <button type="button" className="button secondary" onClick={onCancel} disabled={loading}>
-              Cancel
-            </button>
-          ) : null}
-        </div>
-      </form>
-    </section>
-  )
+      </div>
+      <button disabled={isSubmitting} type="submit">
+        {isSubmitting ? "Adding..." : "Add Field"}
+      </button>
+    </form>
+  );
 }

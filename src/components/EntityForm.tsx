@@ -1,71 +1,53 @@
-import type { FormEvent } from 'react'
+import { useState } from "react";
+import type { FormEvent } from "react";
+import type { CreateEntityInput } from "../services/entityService";
 
 type EntityFormProps = {
-  name: string
-  description: string
-  loading: boolean
-  error?: string
-  isEditing?: boolean
-  onNameChange: (value: string) => void
-  onDescriptionChange: (value: string) => void
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void
-  onCancel?: () => void
-}
+  isSubmitting: boolean;
+  onCreate: (data: CreateEntityInput) => Promise<void>;
+};
 
-export function EntityForm({
-  name,
-  description,
-  loading,
-  error,
-  isEditing,
-  onNameChange,
-  onDescriptionChange,
-  onSubmit,
-  onCancel,
+export default function EntityForm({
+  isSubmitting,
+  onCreate,
 }: EntityFormProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await onCreate({
+      name: name.trim(),
+      description: description.trim() || undefined,
+    });
+    setName("");
+    setDescription("");
+  };
+
   return (
-    <section className="card">
-      <h2>{isEditing ? 'Edit entity' : 'Create entity'}</h2>
-      <form onSubmit={onSubmit}>
-        <label className="field-label" htmlFor="entity-name">
-          Name
-        </label>
+    <form className="form-card" onSubmit={submit}>
+      <div className="form-row">
+        <label htmlFor="entity-name">Name</label>
         <input
           id="entity-name"
           value={name}
-          onChange={(event) => onNameChange(event.target.value)}
-          className="field-input"
-          placeholder="Product"
-          disabled={loading}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Customer"
           required
         />
-
-        <label className="field-label" htmlFor="entity-description">
-          Description
-        </label>
-        <textarea
+      </div>
+      <div className="form-row">
+        <label htmlFor="entity-description">Description</label>
+        <input
           id="entity-description"
           value={description}
-          onChange={(event) => onDescriptionChange(event.target.value)}
-          className="field-input"
-          placeholder="Optional description"
-          rows={4}
-          disabled={loading}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Represents a business customer"
         />
-
-        {error ? <p className="field-error">{error}</p> : null}
-
-        <div className="button-row">
-          <button type="submit" className="button primary" disabled={loading}>
-            {loading ? (isEditing ? 'Saving...' : 'Creating...') : isEditing ? 'Save changes' : 'Create entity'}
-          </button>
-          {onCancel ? (
-            <button type="button" className="button secondary" onClick={onCancel} disabled={loading}>
-              Cancel
-            </button>
-          ) : null}
-        </div>
-      </form>
-    </section>
-  )
+      </div>
+      <button disabled={isSubmitting} type="submit">
+        {isSubmitting ? "Creating..." : "Create Entity"}
+      </button>
+    </form>
+  );
 }
