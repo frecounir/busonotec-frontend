@@ -10,3 +10,14 @@ export type EntityField = {
   type: string;
   businessEntityId: string;
 };
+
+export type EntityRecordValues = Record<
+  string,
+  string | number | boolean | null
+>;
+
+export type EntityRecord = {
+  id: string;
+  businessEntityId: string;
+  values: EntityRecordValues;
+};

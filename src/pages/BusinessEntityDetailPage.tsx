@@ -88,9 +88,9 @@ export default function BusinessEntityDetailPage() {
 
   return (
     <section className="page-stack">
-      {error && <Alert message={error} type="error" showIcon />}
+      {error && <Alert title={error} type="error" showIcon />}
 
-      <Spin spinning={isLoading} tip="Loading entity configuration...">
+      <Spin spinning={isLoading} description="Loading entity configuration...">
         <Card className="page-card">
           <Text type="secondary" strong>
             Business entity

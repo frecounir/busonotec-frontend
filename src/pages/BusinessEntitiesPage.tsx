@@ -30,6 +30,7 @@ export default function BusinessEntitiesPage() {
       setError(null);
       setIsCreating(true);
       await createEntity(data);
+      window.dispatchEvent(new Event("business-entities:changed"));
       await load();
     } catch {
       setError("The business entity could not be created.");
@@ -74,10 +75,10 @@ export default function BusinessEntitiesPage() {
 
       <EntityForm isSubmitting={isCreating} onCreate={handleCreate} />
 
-      {error && <Alert message={error} type="error" showIcon />}
+      {error && <Alert title={error} type="error" showIcon />}
 
       <Card title="Configured entities" className="section-card">
-        <Spin spinning={isLoading} tip="Loading business entities...">
+        <Spin spinning={isLoading} description="Loading business entities...">
           <EntitiesTable entities={entities} />
         </Spin>
       </Card>
