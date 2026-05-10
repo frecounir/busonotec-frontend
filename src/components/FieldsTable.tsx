@@ -1,3 +1,5 @@
+import { Table } from "antd";
+import type { TableColumnsType } from "antd";
 import type { EntityField } from "../types";
 
 type FieldsTableProps = {
@@ -5,30 +7,26 @@ type FieldsTableProps = {
 };
 
 export default function FieldsTable({ fields }: FieldsTableProps) {
-  if (fields.length === 0) {
-    return (
-      <p className="empty-state">
-        No fields have been defined for this entity yet.
-      </p>
-    );
-  }
+  const columns: TableColumnsType<EntityField> = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+    },
+  ];
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {fields.map((field) => (
-          <tr key={field.id}>
-            <td>{field.name}</td>
-            <td>{field.type}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <Table<EntityField>
+      columns={columns}
+      dataSource={fields}
+      locale={{ emptyText: "No fields have been defined for this entity yet." }}
+      pagination={false}
+      rowKey="id"
+    />
   );
 }

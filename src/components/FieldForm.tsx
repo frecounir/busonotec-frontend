@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Form, Input, Select } from "antd";
 import type { CreateFieldInput } from "../services/fieldService";
 
 type FieldFormProps = {
@@ -10,44 +10,54 @@ type FieldFormProps = {
 const fieldTypes = ["string", "number", "boolean", "date"];
 
 export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
-  const [name, setName] = useState("");
-  const [type, setType] = useState("string");
+  const [form] = Form.useForm<Omit<CreateFieldInput, "businessEntityId">>();
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    await onCreate({ name: name.trim(), type });
-    setName("");
+  const submit = async (values: Omit<CreateFieldInput, "businessEntityId">) => {
+    await onCreate({ name: values.name.trim(), type: values.type });
+    form.resetFields(["name"]);
   };
 
   return (
-    <form className="form-card compact" onSubmit={submit}>
-      <div className="form-row">
-        <label htmlFor="field-name">Name</label>
-        <input
-          id="field-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="email"
-          required
-        />
-      </div>
-      <div className="form-row">
-        <label htmlFor="field-type">Type</label>
-        <select
-          id="field-type"
-          value={type}
-          onChange={(event) => setType(event.target.value)}
-        >
-          {fieldTypes.map((fieldType) => (
-            <option key={fieldType} value={fieldType}>
-              {fieldType}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button disabled={isSubmitting} type="submit">
-        {isSubmitting ? "Adding..." : "Add Field"}
-      </button>
-    </form>
+    <Card title="Add field" className="section-card">
+      <Form
+        form={form}
+        initialValues={{ type: "string" }}
+        layout="vertical"
+        onFinish={submit}
+      >
+        <div className="field-form-grid">
+          <Form.Item
+            label="Name"
+            name="name"
+            rules={[
+              { required: true, message: "Please enter the field name." },
+            ]}
+          >
+            <Input placeholder="email" />
+          </Form.Item>
+
+          <Form.Item label="Type" name="type" rules={[{ required: true }]}>
+            <Select
+              options={fieldTypes.map((fieldType) => ({
+                label: fieldType,
+                value: fieldType,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item className="form-action">
+            <Button
+              block
+              htmlType="submit"
+              icon={<PlusOutlined />}
+              loading={isSubmitting}
+              type="primary"
+            >
+              Add Field
+            </Button>
+          </Form.Item>
+        </div>
+      </Form>
+    </Card>
   );
 }

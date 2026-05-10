@@ -1,9 +1,12 @@
+import { Alert, Card, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { getEntities, createEntity } from "../services/entityService";
 import EntitiesTable from "../components/EntitiesTable";
 import EntityForm from "../components/EntityForm";
 import type { CreateEntityInput } from "../services/entityService";
 import type { BusinessEntity } from "../types";
+
+const { Text, Title } = Typography;
 
 export default function BusinessEntitiesPage() {
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
@@ -61,22 +64,23 @@ export default function BusinessEntitiesPage() {
   }, []);
 
   return (
-    <section className="page-section">
-      <div className="page-header">
-        <div>
-          <p className="eyebrow">Configuration</p>
-          <h2>Business Entities</h2>
-        </div>
+    <section className="page-stack">
+      <div>
+        <Text type="secondary" strong>
+          Configuration
+        </Text>
+        <Title level={2}>Business Entities</Title>
       </div>
 
       <EntityForm isSubmitting={isCreating} onCreate={handleCreate} />
 
-      {error && <p className="error-message">{error}</p>}
-      {isLoading ? (
-        <p className="loading-message">Loading business entities...</p>
-      ) : (
-        <EntitiesTable entities={entities} />
-      )}
+      {error && <Alert message={error} type="error" showIcon />}
+
+      <Card title="Configured entities" className="section-card">
+        <Spin spinning={isLoading} tip="Loading business entities...">
+          <EntitiesTable entities={entities} />
+        </Spin>
+      </Card>
     </section>
   );
 }

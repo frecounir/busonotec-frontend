@@ -1,3 +1,4 @@
+import { Alert, Card, Spin, Typography } from "antd";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getEntityById } from "../services/entityService";
@@ -6,6 +7,8 @@ import FieldsTable from "../components/FieldsTable";
 import FieldForm from "../components/FieldForm";
 import type { CreateFieldInput } from "../services/fieldService";
 import type { BusinessEntity, EntityField } from "../types";
+
+const { Paragraph, Text, Title } = Typography;
 
 export default function BusinessEntityDetailPage() {
   const { id } = useParams();
@@ -84,31 +87,27 @@ export default function BusinessEntityDetailPage() {
   }, [id]);
 
   return (
-    <section className="page-section">
-      {isLoading ? (
-        <p className="loading-message">Loading entity configuration...</p>
-      ) : (
-        <>
-          <div className="page-header">
-            <div>
-              <p className="eyebrow">Business entity</p>
-              <h2>{entity?.name || "Entity detail"}</h2>
-              <p>
-                {entity?.description ||
-                  "No description has been defined for this entity."}
-              </p>
-            </div>
-          </div>
+    <section className="page-stack">
+      {error && <Alert message={error} type="error" showIcon />}
 
-          <section className="subsection">
-            <h3>Fields</h3>
-            <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
-            <FieldsTable fields={fields} />
-          </section>
-        </>
-      )}
+      <Spin spinning={isLoading} tip="Loading entity configuration...">
+        <Card className="page-card">
+          <Text type="secondary" strong>
+            Business entity
+          </Text>
+          <Title level={2}>{entity?.name || "Entity detail"}</Title>
+          <Paragraph>
+            {entity?.description ||
+              "No description has been defined for this entity."}
+          </Paragraph>
+        </Card>
 
-      {error && <p className="error-message">{error}</p>}
+        <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
+
+        <Card title="Defined fields" className="section-card">
+          <FieldsTable fields={fields} />
+        </Card>
+      </Spin>
     </section>
   );
 }

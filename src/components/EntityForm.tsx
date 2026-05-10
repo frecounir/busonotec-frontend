@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Form, Input } from "antd";
 import type { CreateEntityInput } from "../services/entityService";
 
 type EntityFormProps = {
@@ -11,43 +11,47 @@ export default function EntityForm({
   isSubmitting,
   onCreate,
 }: EntityFormProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [form] = Form.useForm<CreateEntityInput>();
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submit = async (values: CreateEntityInput) => {
     await onCreate({
-      name: name.trim(),
-      description: description.trim() || undefined,
+      name: values.name.trim(),
+      description: values.description?.trim() || undefined,
     });
-    setName("");
-    setDescription("");
+    form.resetFields();
   };
 
   return (
-    <form className="form-card" onSubmit={submit}>
-      <div className="form-row">
-        <label htmlFor="entity-name">Name</label>
-        <input
-          id="entity-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Customer"
-          required
-        />
-      </div>
-      <div className="form-row">
-        <label htmlFor="entity-description">Description</label>
-        <input
-          id="entity-description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="Represents a business customer"
-        />
-      </div>
-      <button disabled={isSubmitting} type="submit">
-        {isSubmitting ? "Creating..." : "Create Entity"}
-      </button>
-    </form>
+    <Card title="Create business entity" className="section-card">
+      <Form form={form} layout="vertical" onFinish={submit}>
+        <div className="form-grid">
+          <Form.Item
+            label="Name"
+            name="name"
+            rules={[
+              { required: true, message: "Please enter the entity name." },
+            ]}
+          >
+            <Input placeholder="Customer" />
+          </Form.Item>
+
+          <Form.Item label="Description" name="description">
+            <Input placeholder="Represents a business customer" />
+          </Form.Item>
+
+          <Form.Item className="form-action">
+            <Button
+              block
+              htmlType="submit"
+              icon={<PlusOutlined />}
+              loading={isSubmitting}
+              type="primary"
+            >
+              Create Entity
+            </Button>
+          </Form.Item>
+        </div>
+      </Form>
+    </Card>
   );
 }
