@@ -1,3 +1,5 @@
+export type EntityFieldType = "string" | "number" | "boolean" | "date";
+
 export type BusinessEntity = {
   id: string;
   name: string;
@@ -7,17 +9,14 @@ export type BusinessEntity = {
 export type EntityField = {
   id: string;
   name: string;
-  type: string;
+  type: EntityFieldType;
   businessEntityId: string;
 };
 
-export type EntityRecordValues = Record<
-  string,
-  string | number | boolean | null
->;
+export type EntityRecordValue = string | number | boolean | null;
 
-export type EntityRecord = {
+export type EntityRecordPayload = Record<string, EntityRecordValue>;
+
+export type EntityRecord = EntityRecordPayload & {
   id: string;
-  businessEntityId: string;
-  values: EntityRecordValues;
 };

@@ -22,7 +22,7 @@ export default function EntityRecordsTable({
       title: field.name,
       key: field.id,
       render: (_: unknown, record: EntityRecord) => {
-        const value = record.values[field.name];
+        const value = record[field.name];
         return value === null || value === undefined || value === "" ? (
           <Typography.Text type="secondary">Empty</Typography.Text>
         ) : (

@@ -11,14 +11,14 @@ import {
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect } from "react";
-import type { EntityField, EntityRecord, EntityRecordValues } from "../types";
+import type { EntityField, EntityRecord, EntityRecordPayload } from "../types";
 
 type EntityRecordFormProps = {
   editingRecord: EntityRecord | null;
   fields: EntityField[];
   isSubmitting: boolean;
   onCancelEdit: () => void;
-  onSubmit: (values: EntityRecordValues) => Promise<void>;
+  onSubmit: (values: EntityRecordPayload) => Promise<void>;
 };
 
 type FormValues = Record<
@@ -27,7 +27,7 @@ type FormValues = Record<
 >;
 
 function getInitialValue(field: EntityField, record: EntityRecord | null) {
-  const value = record?.values[field.name];
+  const value = record?.[field.name];
 
   if (field.type === "date" && typeof value === "string") {
     return dayjs(value);
@@ -39,8 +39,8 @@ function getInitialValue(field: EntityField, record: EntityRecord | null) {
 function normalizeValues(
   fields: EntityField[],
   values: FormValues,
-): EntityRecordValues {
-  return fields.reduce<EntityRecordValues>((recordValues, field) => {
+): EntityRecordPayload {
+  return fields.reduce<EntityRecordPayload>((recordValues, field) => {
     const value = values[field.name];
 
     if (field.type === "date" && dayjs.isDayjs(value)) {

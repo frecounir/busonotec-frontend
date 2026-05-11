@@ -1,4 +1,4 @@
-import type { EntityRecord, EntityRecordValues } from "../types";
+import type { EntityRecord, EntityRecordPayload } from "../types";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -18,7 +18,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export type SaveEntityRecordInput = EntityRecordValues;
+export type SaveEntityRecordInput = EntityRecordPayload;
 
 export function getEntityRecords(entityId: string): Promise<EntityRecord[]> {
   return request<EntityRecord[]>(`/entities/${entityId}/records`);
@@ -37,10 +37,9 @@ export function createEntityRecord(
 
 export function updateEntityRecord(
   entityId: string,
-  recordId: string,
-  data: SaveEntityRecordInput,
+  data: EntityRecord,
 ): Promise<EntityRecord> {
-  return request<EntityRecord>(`/entities/${entityId}/records/${recordId}`, {
+  return request<EntityRecord>(`/entities/${entityId}/records`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -49,9 +48,11 @@ export function updateEntityRecord(
 
 export function deleteEntityRecord(
   entityId: string,
-  recordId: string,
+  record: EntityRecord,
 ): Promise<void> {
-  return request<void>(`/entities/${entityId}/records/${recordId}`, {
+  return request<void>(`/entities/${entityId}/records`, {
     method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record),
   });
 }

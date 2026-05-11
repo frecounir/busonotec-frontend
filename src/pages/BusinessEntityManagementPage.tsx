@@ -15,7 +15,7 @@ import type {
   BusinessEntity,
   EntityField,
   EntityRecord,
-  EntityRecordValues,
+  EntityRecordPayload,
 } from "../types";
 
 const { Paragraph, Text, Title } = Typography;
@@ -53,7 +53,7 @@ export default function BusinessEntityManagementPage() {
     }
   };
 
-  const handleSaveRecord = async (values: EntityRecordValues) => {
+  const handleSaveRecord = async (values: EntityRecordPayload) => {
     if (!entityId) {
       return;
     }
@@ -63,7 +63,7 @@ export default function BusinessEntityManagementPage() {
       setIsSaving(true);
 
       if (editingRecord) {
-        await updateEntityRecord(entityId, editingRecord.id, values);
+        await updateEntityRecord(entityId, { id: editingRecord.id, ...values });
       } else {
         await createEntityRecord(entityId, values);
       }
@@ -85,7 +85,7 @@ export default function BusinessEntityManagementPage() {
     try {
       setError(null);
       setIsDeleting(true);
-      await deleteEntityRecord(entityId, record.id);
+      await deleteEntityRecord(entityId, record);
 
       if (editingRecord?.id === record.id) {
         setEditingRecord(null);
