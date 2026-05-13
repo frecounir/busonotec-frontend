@@ -63,7 +63,7 @@ export default function BusinessEntityManagementPage() {
       setIsSaving(true);
 
       if (editingRecord) {
-        await updateEntityRecord(entityId, { id: editingRecord.id, ...values });
+        await updateEntityRecord(entityId, editingRecord.id, values);
       } else {
         await createEntityRecord(entityId, values);
       }
@@ -85,7 +85,7 @@ export default function BusinessEntityManagementPage() {
     try {
       setError(null);
       setIsDeleting(true);
-      await deleteEntityRecord(entityId, record);
+      await deleteEntityRecord(entityId, record.id);
 
       if (editingRecord?.id === record.id) {
         setEditingRecord(null);

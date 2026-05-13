@@ -37,10 +37,11 @@ export function createEntityRecord(
 
 export function updateEntityRecord(
   entityId: string,
-  data: EntityRecord,
+  recordId: string,
+  data: SaveEntityRecordInput,
 ): Promise<EntityRecord> {
-  return request<EntityRecord>(`/entities/${entityId}/records`, {
-    method: "PUT",
+  return request<EntityRecord>(`/entities/${entityId}/records/${recordId}`, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
@@ -48,11 +49,9 @@ export function updateEntityRecord(
 
 export function deleteEntityRecord(
   entityId: string,
-  record: EntityRecord,
+  recordId: string,
 ): Promise<void> {
-  return request<void>(`/entities/${entityId}/records`, {
+  return request<void>(`/entities/${entityId}/records/${recordId}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(record),
   });
 }
