@@ -1,4 +1,4 @@
-import { Alert, Card, Spin, Typography } from "antd";
+import { Alert, Card, Col, Row, Spin, Statistic, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { getEntities, createEntity } from "../services/entityService";
 import EntitiesTable from "../components/EntitiesTable";
@@ -66,12 +66,25 @@ export default function BusinessEntitiesPage() {
 
   return (
     <section className="page-stack">
-      <div>
+      <div className="page-heading">
         <Text type="secondary" strong>
           Configuration
         </Text>
         <Title level={2}>Business Entities</Title>
       </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <Card className="insight-card">
+            <Statistic title="Configured entities" value={entities.length} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Card className="insight-card">
+            <Statistic title="Generated menu items" value={entities.length} />
+          </Card>
+        </Col>
+      </Row>
 
       <EntityForm isSubmitting={isCreating} onCreate={handleCreate} />
 

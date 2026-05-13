@@ -1,3 +1,4 @@
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Space, Table, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 import type { EntityField, EntityRecord } from "../types";
@@ -36,7 +37,9 @@ export default function EntityRecordsTable({
       fixed: "right",
       render: (_, record) => (
         <Space wrap>
-          <Button onClick={() => onEdit(record)}>Update</Button>
+          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
+            Update
+          </Button>
           <Popconfirm
             title="Delete record"
             description="This record will be removed from the entity data."
@@ -44,7 +47,9 @@ export default function EntityRecordsTable({
             okText="Delete"
             onConfirm={() => onDelete(record)}
           >
-            <Button danger>Delete</Button>
+            <Button danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
           </Popconfirm>
         </Space>
       ),

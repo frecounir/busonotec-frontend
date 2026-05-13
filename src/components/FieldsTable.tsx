@@ -1,4 +1,4 @@
-import { Table } from "antd";
+import { Table, Tag } from "antd";
 import type { TableColumnsType } from "antd";
 import type { EntityField } from "../types";
 
@@ -17,6 +17,7 @@ export default function FieldsTable({ fields }: FieldsTableProps) {
       title: "Type",
       dataIndex: "type",
       key: "type",
+      render: (type: EntityField["type"]) => <Tag color="cyan">{type}</Tag>,
     },
   ];
 
@@ -27,6 +28,7 @@ export default function FieldsTable({ fields }: FieldsTableProps) {
       locale={{ emptyText: "No fields have been defined for this entity yet." }}
       pagination={false}
       rowKey="id"
+      scroll={{ x: true }}
     />
   );
 }

@@ -1,4 +1,13 @@
-import { Alert, Card, Empty, Spin, Typography } from "antd";
+import {
+  Alert,
+  Card,
+  Col,
+  Empty,
+  Row,
+  Spin,
+  Statistic,
+  Typography,
+} from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import EntityRecordForm from "../components/EntityRecordForm";
@@ -147,7 +156,7 @@ export default function BusinessEntityManagementPage() {
 
   return (
     <section className="page-stack wide-page">
-      <div>
+      <div className="page-heading">
         <Text type="secondary" strong>
           Generated management
         </Text>
@@ -157,6 +166,19 @@ export default function BusinessEntityManagementPage() {
           based on its field definition.
         </Paragraph>
       </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <Card className="insight-card">
+            <Statistic title="Available fields" value={fields.length} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Card className="insight-card">
+            <Statistic title="Stored records" value={records.length} />
+          </Card>
+        </Col>
+      </Row>
 
       {error && <Alert title={error} type="error" showIcon />}
 

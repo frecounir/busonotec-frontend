@@ -2,8 +2,18 @@ import {
   AppstoreAddOutlined,
   DatabaseOutlined,
   HomeOutlined,
+  MenuOutlined,
 } from "@ant-design/icons";
-import { ConfigProvider, Layout, Menu, Typography, theme } from "antd";
+import {
+  Button,
+  ConfigProvider,
+  Drawer,
+  Flex,
+  Layout,
+  Menu,
+  Typography,
+  theme,
+} from "antd";
 import type { MenuProps } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -20,7 +30,7 @@ import BusinessEntityManagementPage from "./pages/BusinessEntityManagementPage";
 import { getEntities } from "./services/entityService";
 import type { BusinessEntity } from "./types";
 
-const { Content, Sider } = Layout;
+const { Content, Header, Sider } = Layout;
 const { Text, Title } = Typography;
 
 function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
@@ -60,6 +70,7 @@ function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const selectedKey = location.pathname.startsWith("/management/")
     ? location.pathname
     : location.pathname.startsWith("/entities")
@@ -82,51 +93,84 @@ function AppLayout() {
     };
   }, []);
 
-  return (
-    <Layout className="app-layout">
-      <Sider
-        breakpoint="lg"
-        collapsedWidth="0"
-        width={280}
-        className="app-sider"
-      >
-        <div className="brand">
+  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
+    if (key.startsWith("/")) {
+      navigate(key);
+      setIsMenuOpen(false);
+    }
+  };
+
+  const navigationMenu = (
+    <>
+      <div className="brand">
+        <div className="brand-mark">LC</div>
+        <div>
           <Text className="brand-label">Master's thesis</Text>
           <Title level={4} className="brand-title">
             Low-Code Platform
           </Title>
         </div>
-        <Menu
-          mode="inline"
-          theme="dark"
-          items={menuItems}
-          defaultOpenKeys={["generated-management"]}
-          selectedKeys={[selectedKey]}
-          onClick={({ key }) => {
-            if (key.startsWith("/")) {
-              navigate(key);
-            }
-          }}
-        />
+      </div>
+      <Menu
+        mode="inline"
+        theme="dark"
+        items={menuItems}
+        defaultOpenKeys={["generated-management"]}
+        selectedKeys={[selectedKey]}
+        onClick={handleMenuClick}
+      />
+    </>
+  );
+
+  return (
+    <Layout className="app-layout">
+      <Sider width={292} className="app-sider">
+        {navigationMenu}
       </Sider>
+      <Drawer
+        className="mobile-navigation"
+        onClose={() => setIsMenuOpen(false)}
+        open={isMenuOpen}
+        placement="left"
+        title={null}
+        width={300}
+      >
+        {navigationMenu}
+      </Drawer>
       <Layout>
+        <Header className="mobile-header">
+          <Flex align="center" justify="space-between">
+            <Button
+              aria-label="Open navigation menu"
+              icon={<MenuOutlined />}
+              onClick={() => setIsMenuOpen(true)}
+            />
+            <Text strong>Low-Code Platform</Text>
+          </Flex>
+        </Header>
         <Content className="app-content">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/entities" element={<BusinessEntitiesPage />} />
-            <Route
-              path="/entities/:id"
-              element={<BusinessEntityDetailPage />}
-            />
-            <Route
-              path="/management"
-              element={<BusinessEntityManagementPage key={location.pathname} />}
-            />
-            <Route
-              path="/management/:entityId"
-              element={<BusinessEntityManagementPage key={location.pathname} />}
-            />
-          </Routes>
+          <div className="content-panel">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/entities" element={<BusinessEntitiesPage />} />
+              <Route
+                path="/entities/:id"
+                element={<BusinessEntityDetailPage />}
+              />
+              <Route
+                path="/management"
+                element={
+                  <BusinessEntityManagementPage key={location.pathname} />
+                }
+              />
+              <Route
+                path="/management/:entityId"
+                element={
+                  <BusinessEntityManagementPage key={location.pathname} />
+                }
+              />
+            </Routes>
+          </div>
         </Content>
       </Layout>
     </Layout>
@@ -140,9 +184,25 @@ export default function App() {
         algorithm: theme.defaultAlgorithm,
         token: {
           borderRadius: 8,
-          colorPrimary: "#2563eb",
+          colorBgLayout: "#eef3f8",
+          colorPrimary: "#2f6f73",
           fontFamily:
-            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            'Nunito, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        },
+        components: {
+          Card: {
+            borderRadiusLG: 16,
+            boxShadowTertiary: "0 16px 40px rgba(25, 40, 57, 0.08)",
+          },
+          Layout: {
+            siderBg: "#17363a",
+            triggerBg: "#17363a",
+          },
+          Menu: {
+            darkItemBg: "#17363a",
+            darkItemHoverBg: "#245156",
+            darkItemSelectedBg: "#2f6f73",
+          },
         },
       }}
     >

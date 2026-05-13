@@ -1,3 +1,4 @@
+import { SettingOutlined } from "@ant-design/icons";
 import { Button, Table, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 import { Link } from "react-router-dom";
@@ -28,7 +29,9 @@ export default function EntitiesTable({ entities }: EntitiesTableProps) {
       key: "actions",
       render: (_, entity) => (
         <Link to={`/entities/${entity.id}`}>
-          <Button type="primary">Manage</Button>
+          <Button icon={<SettingOutlined />} type="primary">
+            Manage
+          </Button>
         </Link>
       ),
     },
@@ -41,6 +44,7 @@ export default function EntitiesTable({ entities }: EntitiesTableProps) {
       locale={{ emptyText: "No business entities have been created yet." }}
       pagination={false}
       rowKey="id"
+      scroll={{ x: true }}
     />
   );
 }

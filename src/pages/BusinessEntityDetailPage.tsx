@@ -1,4 +1,4 @@
-import { Alert, Card, Spin, Typography } from "antd";
+import { Alert, Card, Col, Row, Spin, Statistic, Typography } from "antd";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getEntityById } from "../services/entityService";
@@ -101,6 +101,22 @@ export default function BusinessEntityDetailPage() {
               "No description has been defined for this entity."}
           </Paragraph>
         </Card>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12}>
+            <Card className="insight-card">
+              <Statistic title="Defined fields" value={fields.length} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card className="insight-card">
+              <Statistic
+                title="Generated module"
+                value={entity ? "Ready" : "Pending"}
+              />
+            </Card>
+          </Col>
+        </Row>
 
         <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
 
