@@ -14,6 +14,7 @@ import {
   Typography,
   theme,
 } from "antd";
+import esES from "antd/locale/es_ES";
 import type { MenuProps } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -180,6 +181,7 @@ function AppLayout() {
 export default function App() {
   return (
     <ConfigProvider
+      locale={esES}
       theme={{
         algorithm: theme.defaultAlgorithm,
         token: {

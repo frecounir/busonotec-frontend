@@ -3,15 +3,18 @@ import {
   Card,
   Col,
   Empty,
+  Flex,
   Row,
   Spin,
   Statistic,
   Typography,
 } from "antd";
-import { useEffect, useState } from "react";
+import type { TourProps } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import EntityRecordForm from "../components/EntityRecordForm";
 import EntityRecordsTable from "../components/EntityRecordsTable";
+import PageGuide from "../components/PageGuide";
 import { getEntityById } from "../services/entityService";
 import { getFields } from "../services/fieldService";
 import {
@@ -41,6 +44,36 @@ export default function BusinessEntityManagementPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const steps: TourProps["steps"] = [
+    {
+      title: "Gestiona datos reales",
+      description:
+        "Esta pantalla es el resultado de la configuración previa. Aquí el usuario ya no define la estructura; ahora trabaja con datos reales. Por ejemplo, si la entidad es Estudiantes, aquí podrá registrar estudiantes concretos.",
+      target: () => headingRef.current as HTMLElement,
+    },
+    {
+      title: "Entiende el estado del módulo",
+      description:
+        "Estos indicadores explican el estado de la pantalla generada: cuántos campos forman el formulario y cuántos registros se han guardado. Esto ayuda a comprobar si la entidad ya está lista para ser usada por el negocio.",
+      target: () => statsRef.current as HTMLElement,
+    },
+    {
+      title: "Inserta o actualiza información",
+      description:
+        "El formulario cambia según los campos que se configuraron antes. Si se creó un campo puntaje, aparecerá para diligenciarlo. Si se creó activo, aparecerá como una opción de sí o no. Así, cada entidad tiene su propio formulario sin construirlo manualmente.",
+      target: () => formRef.current as HTMLElement,
+    },
+    {
+      title: "Administra registros",
+      description:
+        "La tabla muestra la información ya guardada. Desde aquí se puede actualizar una fila, por ejemplo corregir el correo de un estudiante, o eliminar un registro cuando ya no sea necesario conservarlo.",
+      target: () => tableRef.current as HTMLElement,
+    },
+  ];
 
   const loadManagementData = async (businessEntityId: string) => {
     setError(null);
@@ -158,31 +191,38 @@ export default function BusinessEntityManagementPage() {
 
   return (
     <section className="page-stack wide-page">
-      <div className="page-heading">
-        <Text type="secondary" strong>
-          Gestión generada
-        </Text>
-        <Title level={2}>
-          {entity?.name || "Gestión de entidad de negocio"}
-        </Title>
+      <div ref={headingRef} className="page-heading">
+        <Flex align="flex-start" gap={16} justify="space-between" wrap>
+          <div>
+            <Text type="secondary" strong>
+              Gestión generada
+            </Text>
+            <Title level={2}>
+              {entity?.name || "Gestión de entidad de negocio"}
+            </Title>
+          </div>
+          <PageGuide steps={steps} />
+        </Flex>
         <Paragraph>
           Inserta, actualiza y elimina registros dinámicos para esta entidad de
           negocio a partir de la definición de sus campos.
         </Paragraph>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card className="insight-card">
-            <Statistic title="Campos disponibles" value={fields.length} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card className="insight-card">
-            <Statistic title="Registros almacenados" value={records.length} />
-          </Card>
-        </Col>
-      </Row>
+      <div ref={statsRef}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12}>
+            <Card className="insight-card">
+              <Statistic title="Campos disponibles" value={fields.length} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card className="insight-card">
+              <Statistic title="Registros almacenados" value={records.length} />
+            </Card>
+          </Col>
+        </Row>
+      </div>
 
       {error && <Alert title={error} type="error" showIcon />}
 
@@ -191,7 +231,7 @@ export default function BusinessEntityManagementPage() {
         description="Cargando campos y registros de la entidad..."
       >
         <div className="management-grid">
-          <div>
+          <div ref={formRef}>
             {fields.length === 0 ? (
               <Card className="section-card">
                 <Empty description="Define campos para esta entidad antes de insertar registros." />
@@ -207,18 +247,20 @@ export default function BusinessEntityManagementPage() {
             )}
           </div>
 
-          <Card
-            className="section-card"
-            title={`Registros de ${entity?.name || "la entidad"}`}
-          >
-            <EntityRecordsTable
-              fields={fields}
-              isDeleting={isDeleting}
-              onDelete={handleDeleteRecord}
-              onEdit={setEditingRecord}
-              records={records}
-            />
-          </Card>
+          <div ref={tableRef}>
+            <Card
+              className="section-card"
+              title={`Registros de ${entity?.name || "la entidad"}`}
+            >
+              <EntityRecordsTable
+                fields={fields}
+                isDeleting={isDeleting}
+                onDelete={handleDeleteRecord}
+                onEdit={setEditingRecord}
+                records={records}
+              />
+            </Card>
+          </div>
         </div>
       </Spin>
     </section>
