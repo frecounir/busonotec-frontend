@@ -22,21 +22,21 @@ export default function EntityForm({
   };
 
   return (
-    <Card title="Create business entity" className="section-card">
+    <Card title="Crear entidad de negocio" className="section-card">
       <Form form={form} layout="vertical" onFinish={submit}>
         <div className="form-grid">
           <Form.Item
-            label="Name"
+            label="Nombre"
             name="name"
             rules={[
-              { required: true, message: "Please enter the entity name." },
+              { required: true, message: "Ingresa el nombre de la entidad." },
             ]}
           >
-            <Input placeholder="Customer" />
+            <Input placeholder="Cliente" />
           </Form.Item>
 
-          <Form.Item label="Description" name="description">
-            <Input placeholder="Represents a business customer" />
+          <Form.Item label="Descripción" name="description">
+            <Input placeholder="Representa un cliente del negocio" />
           </Form.Item>
 
           <Form.Item className="form-action">
@@ -47,7 +47,7 @@ export default function EntityForm({
               loading={isSubmitting}
               type="primary"
             >
-              Create Entity
+              Crear entidad
             </Button>
           </Form.Item>
         </div>

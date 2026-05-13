@@ -6,18 +6,27 @@ type FieldsTableProps = {
   fields: EntityField[];
 };
 
+const fieldTypeLabels: Record<EntityField["type"], string> = {
+  string: "Texto",
+  number: "Número",
+  boolean: "Verdadero/Falso",
+  date: "Fecha",
+};
+
 export default function FieldsTable({ fields }: FieldsTableProps) {
   const columns: TableColumnsType<EntityField> = [
     {
-      title: "Name",
+      title: "Nombre",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Type",
+      title: "Tipo",
       dataIndex: "type",
       key: "type",
-      render: (type: EntityField["type"]) => <Tag color="cyan">{type}</Tag>,
+      render: (type: EntityField["type"]) => (
+        <Tag color="cyan">{fieldTypeLabels[type]}</Tag>
+      ),
     },
   ];
 
@@ -25,7 +34,7 @@ export default function FieldsTable({ fields }: FieldsTableProps) {
     <Table<EntityField>
       columns={columns}
       dataSource={fields}
-      locale={{ emptyText: "No fields have been defined for this entity yet." }}
+      locale={{ emptyText: "Aún no se han definido campos para esta entidad." }}
       pagination={false}
       rowKey="id"
       scroll={{ x: true }}

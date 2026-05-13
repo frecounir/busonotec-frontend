@@ -9,6 +9,13 @@ type FieldFormProps = {
 
 const fieldTypes = ["string", "number", "boolean", "date"];
 
+const fieldTypeLabels: Record<(typeof fieldTypes)[number], string> = {
+  string: "Texto",
+  number: "Número",
+  boolean: "Verdadero/Falso",
+  date: "Fecha",
+};
+
 export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
   const [form] = Form.useForm<Omit<CreateFieldInput, "businessEntityId">>();
 
@@ -18,7 +25,7 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
   };
 
   return (
-    <Card title="Add field" className="section-card">
+    <Card title="Agregar campo" className="section-card">
       <Form
         form={form}
         initialValues={{ type: "string" }}
@@ -27,19 +34,19 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
       >
         <div className="field-form-grid">
           <Form.Item
-            label="Name"
+            label="Nombre"
             name="name"
             rules={[
-              { required: true, message: "Please enter the field name." },
+              { required: true, message: "Ingresa el nombre del campo." },
             ]}
           >
-            <Input placeholder="email" />
+            <Input placeholder="correo_electronico" />
           </Form.Item>
 
-          <Form.Item label="Type" name="type" rules={[{ required: true }]}>
+          <Form.Item label="Tipo" name="type" rules={[{ required: true }]}>
             <Select
               options={fieldTypes.map((fieldType) => ({
-                label: fieldType,
+                label: fieldTypeLabels[fieldType],
                 value: fieldType,
               }))}
             />
@@ -53,7 +60,7 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
               loading={isSubmitting}
               type="primary"
             >
-              Add Field
+              Agregar campo
             </Button>
           </Form.Item>
         </div>

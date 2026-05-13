@@ -7,7 +7,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     throw new Error(
-      "The entity record service request could not be completed.",
+      "No fue posible completar la solicitud de registros de la entidad.",
     );
   }
 

@@ -25,30 +25,30 @@ export default function EntityRecordsTable({
       render: (_: unknown, record: EntityRecord) => {
         const value = record[field.name];
         return value === null || value === undefined || value === "" ? (
-          <Typography.Text type="secondary">Empty</Typography.Text>
+          <Typography.Text type="secondary">Vacío</Typography.Text>
         ) : (
           String(value)
         );
       },
     })),
     {
-      title: "Actions",
+      title: "Acciones",
       key: "actions",
       fixed: "right",
       render: (_, record) => (
         <Space wrap>
           <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Update
+            Actualizar
           </Button>
           <Popconfirm
-            title="Delete record"
-            description="This record will be removed from the entity data."
+            title="Eliminar registro"
+            description="Este registro se eliminará de los datos de la entidad."
             okButtonProps={{ danger: true, loading: isDeleting }}
-            okText="Delete"
+            okText="Eliminar"
             onConfirm={() => onDelete(record)}
           >
             <Button danger icon={<DeleteOutlined />}>
-              Delete
+              Eliminar
             </Button>
           </Popconfirm>
         </Space>
@@ -61,7 +61,7 @@ export default function EntityRecordsTable({
       columns={columns}
       dataSource={records}
       locale={{
-        emptyText: "No records have been inserted for this entity yet.",
+        emptyText: "Aún no se han insertado registros para esta entidad.",
       }}
       rowKey="id"
       scroll={{ x: true }}

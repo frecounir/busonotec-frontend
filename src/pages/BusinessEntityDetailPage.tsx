@@ -50,7 +50,7 @@ export default function BusinessEntityDetailPage() {
       await createField({ ...data, businessEntityId: id });
       await load();
     } catch {
-      setError("The field could not be created.");
+      setError("No fue posible crear el campo.");
     } finally {
       setIsCreating(false);
     }
@@ -72,7 +72,9 @@ export default function BusinessEntityDetailPage() {
       })
       .catch(() => {
         if (isActive) {
-          setError("The business entity information could not be loaded.");
+          setError(
+            "No fue posible cargar la información de la entidad de negocio.",
+          );
         }
       })
       .finally(() => {
@@ -90,29 +92,32 @@ export default function BusinessEntityDetailPage() {
     <section className="page-stack">
       {error && <Alert title={error} type="error" showIcon />}
 
-      <Spin spinning={isLoading} description="Loading entity configuration...">
+      <Spin
+        spinning={isLoading}
+        description="Cargando configuración de la entidad..."
+      >
         <Card className="page-card">
           <Text type="secondary" strong>
-            Business entity
+            Entidad de negocio
           </Text>
-          <Title level={2}>{entity?.name || "Entity detail"}</Title>
+          <Title level={2}>{entity?.name || "Detalle de la entidad"}</Title>
           <Paragraph>
             {entity?.description ||
-              "No description has been defined for this entity."}
+              "No se ha definido una descripción para esta entidad."}
           </Paragraph>
         </Card>
 
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12}>
             <Card className="insight-card">
-              <Statistic title="Defined fields" value={fields.length} />
+              <Statistic title="Campos definidos" value={fields.length} />
             </Card>
           </Col>
           <Col xs={24} sm={12}>
             <Card className="insight-card">
               <Statistic
-                title="Generated module"
-                value={entity ? "Ready" : "Pending"}
+                title="Módulo generado"
+                value={entity ? "Listo" : "Pendiente"}
               />
             </Card>
           </Col>
@@ -120,7 +125,7 @@ export default function BusinessEntityDetailPage() {
 
         <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
 
-        <Card title="Defined fields" className="section-card">
+        <Card title="Campos definidos" className="section-card">
           <FieldsTable fields={fields} />
         </Card>
       </Spin>

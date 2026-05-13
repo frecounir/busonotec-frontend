@@ -56,7 +56,7 @@ export default function BusinessEntityManagementPage() {
       setFields(fieldsResponse);
       setRecords(recordsResponse);
     } catch {
-      setError("The selected business entity data could not be loaded.");
+      setError("No fue posible cargar los datos de la entidad seleccionada.");
     } finally {
       setIsLoadingConfiguration(false);
     }
@@ -80,7 +80,7 @@ export default function BusinessEntityManagementPage() {
       setEditingRecord(null);
       await loadManagementData(entityId);
     } catch {
-      setError("The record could not be saved.");
+      setError("No fue posible guardar el registro.");
     } finally {
       setIsSaving(false);
     }
@@ -102,7 +102,7 @@ export default function BusinessEntityManagementPage() {
 
       await loadManagementData(entityId);
     } catch {
-      setError("The record could not be deleted.");
+      setError("No fue posible eliminar el registro.");
     } finally {
       setIsDeleting(false);
     }
@@ -130,7 +130,9 @@ export default function BusinessEntityManagementPage() {
       })
       .catch(() => {
         if (isActive) {
-          setError("The selected business entity data could not be loaded.");
+          setError(
+            "No fue posible cargar los datos de la entidad seleccionada.",
+          );
         }
       })
       .finally(() => {
@@ -148,7 +150,7 @@ export default function BusinessEntityManagementPage() {
     return (
       <section className="page-stack wide-page">
         <Card className="section-card">
-          <Empty description="Select a generated business entity from the sidebar menu." />
+          <Empty description="Selecciona una entidad generada desde el menú lateral." />
         </Card>
       </section>
     );
@@ -158,24 +160,26 @@ export default function BusinessEntityManagementPage() {
     <section className="page-stack wide-page">
       <div className="page-heading">
         <Text type="secondary" strong>
-          Generated management
+          Gestión generada
         </Text>
-        <Title level={2}>{entity?.name || "Business Entity Management"}</Title>
+        <Title level={2}>
+          {entity?.name || "Gestión de entidad de negocio"}
+        </Title>
         <Paragraph>
-          Insert, update, and delete dynamic records for this business entity
-          based on its field definition.
+          Inserta, actualiza y elimina registros dinámicos para esta entidad de
+          negocio a partir de la definición de sus campos.
         </Paragraph>
       </div>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12}>
           <Card className="insight-card">
-            <Statistic title="Available fields" value={fields.length} />
+            <Statistic title="Campos disponibles" value={fields.length} />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card className="insight-card">
-            <Statistic title="Stored records" value={records.length} />
+            <Statistic title="Registros almacenados" value={records.length} />
           </Card>
         </Col>
       </Row>
@@ -184,13 +188,13 @@ export default function BusinessEntityManagementPage() {
 
       <Spin
         spinning={isLoadingConfiguration}
-        description="Loading entity fields and records..."
+        description="Cargando campos y registros de la entidad..."
       >
         <div className="management-grid">
           <div>
             {fields.length === 0 ? (
               <Card className="section-card">
-                <Empty description="Define fields for this entity before inserting records." />
+                <Empty description="Define campos para esta entidad antes de insertar registros." />
               </Card>
             ) : (
               <EntityRecordForm
@@ -205,7 +209,7 @@ export default function BusinessEntityManagementPage() {
 
           <Card
             className="section-card"
-            title={`${entity?.name || "Entity"} records`}
+            title={`Registros de ${entity?.name || "la entidad"}`}
           >
             <EntityRecordsTable
               fields={fields}

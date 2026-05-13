@@ -33,7 +33,7 @@ export default function BusinessEntitiesPage() {
       window.dispatchEvent(new Event("business-entities:changed"));
       await load();
     } catch {
-      setError("The business entity could not be created.");
+      setError("No fue posible crear la entidad de negocio.");
     } finally {
       setIsCreating(false);
     }
@@ -50,7 +50,7 @@ export default function BusinessEntitiesPage() {
       })
       .catch(() => {
         if (isActive) {
-          setError("Business entities could not be loaded.");
+          setError("No fue posible cargar las entidades de negocio.");
         }
       })
       .finally(() => {
@@ -68,20 +68,20 @@ export default function BusinessEntitiesPage() {
     <section className="page-stack">
       <div className="page-heading">
         <Text type="secondary" strong>
-          Configuration
+          Configuración
         </Text>
-        <Title level={2}>Business Entities</Title>
+        <Title level={2}>Entidades de negocio</Title>
       </div>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12}>
           <Card className="insight-card">
-            <Statistic title="Configured entities" value={entities.length} />
+            <Statistic title="Entidades configuradas" value={entities.length} />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card className="insight-card">
-            <Statistic title="Generated menu items" value={entities.length} />
+            <Statistic title="Opciones generadas" value={entities.length} />
           </Card>
         </Col>
       </Row>
@@ -90,8 +90,11 @@ export default function BusinessEntitiesPage() {
 
       {error && <Alert title={error} type="error" showIcon />}
 
-      <Card title="Configured entities" className="section-card">
-        <Spin spinning={isLoading} description="Loading business entities...">
+      <Card title="Entidades configuradas" className="section-card">
+        <Spin
+          spinning={isLoading}
+          description="Cargando entidades de negocio..."
+        >
           <EntitiesTable entities={entities} />
         </Spin>
       </Card>

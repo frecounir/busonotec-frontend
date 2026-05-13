@@ -64,7 +64,7 @@ function renderFieldInput(field: EntityField) {
   }
 
   if (field.type === "boolean") {
-    return <Switch checkedChildren="Yes" unCheckedChildren="No" />;
+    return <Switch checkedChildren="Sí" unCheckedChildren="No" />;
   }
 
   if (field.type === "date") {
@@ -100,7 +100,7 @@ export default function EntityRecordForm({
   return (
     <Card
       className="section-card"
-      title={editingRecord ? "Update record" : "Create record"}
+      title={editingRecord ? "Actualizar registro" : "Crear registro"}
     >
       <Form form={form} layout="vertical" onFinish={submit}>
         {fields.map((field) => (
@@ -112,7 +112,7 @@ export default function EntityRecordForm({
             rules={[
               {
                 required: field.type !== "boolean",
-                message: `Please enter ${field.name}.`,
+                message: `Ingresa ${field.name}.`,
               },
             ]}
           >
@@ -122,9 +122,9 @@ export default function EntityRecordForm({
 
         <Space wrap>
           <Button htmlType="submit" loading={isSubmitting} type="primary">
-            {editingRecord ? "Update" : "Create"}
+            {editingRecord ? "Actualizar" : "Crear"}
           </Button>
-          {editingRecord && <Button onClick={onCancelEdit}>Cancel</Button>}
+          {editingRecord && <Button onClick={onCancelEdit}>Cancelar</Button>}
         </Space>
       </Form>
     </Card>

@@ -6,7 +6,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${url}`, options);
 
   if (!response.ok) {
-    throw new Error("The field service request could not be completed.");
+    throw new Error("No fue posible completar la solicitud de campos.");
   }
 
   return response.json() as Promise<T>;

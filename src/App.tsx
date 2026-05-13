@@ -38,17 +38,17 @@ function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
     {
       key: "/",
       icon: <HomeOutlined />,
-      label: "Home",
+      label: "Inicio",
     },
     {
       key: "/entities",
       icon: <DatabaseOutlined />,
-      label: "Business Entities",
+      label: "Entidades de negocio",
     },
     {
       key: "generated-management",
       icon: <AppstoreAddOutlined />,
-      label: "Generated Management",
+      label: "Gestión generada",
       children:
         entities.length > 0
           ? entities.map((entity) => ({
@@ -58,7 +58,7 @@ function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
           : [
               {
                 key: "no-generated-entities",
-                label: "No entities created",
+                label: "Sin entidades creadas",
                 disabled: true,
               },
             ],
@@ -105,9 +105,9 @@ function AppLayout() {
       <div className="brand">
         <div className="brand-mark">LC</div>
         <div>
-          <Text className="brand-label">Master's thesis</Text>
+          <Text className="brand-label">Tesis de maestría</Text>
           <Title level={4} className="brand-title">
-            Low-Code Platform
+            Plataforma Low Code
           </Title>
         </div>
       </div>
@@ -141,11 +141,11 @@ function AppLayout() {
         <Header className="mobile-header">
           <Flex align="center" justify="space-between">
             <Button
-              aria-label="Open navigation menu"
+              aria-label="Abrir menú de navegación"
               icon={<MenuOutlined />}
               onClick={() => setIsMenuOpen(true)}
             />
-            <Text strong>Low-Code Platform</Text>
+            <Text strong>Plataforma Low Code</Text>
           </Flex>
         </Header>
         <Content className="app-content">
