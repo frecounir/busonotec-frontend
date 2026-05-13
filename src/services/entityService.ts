@@ -9,6 +9,10 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error("No fue posible completar la solicitud de entidades.");
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -30,5 +34,11 @@ export function createEntity(data: CreateEntityInput): Promise<BusinessEntity> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+  });
+}
+
+export function deleteEntity(id: string): Promise<void> {
+  return request<void>(`/entities/${id}`, {
+    method: "DELETE",
   });
 }

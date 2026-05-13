@@ -1,14 +1,20 @@
-import { SettingOutlined } from "@ant-design/icons";
-import { Button, Table, Typography } from "antd";
+import { DeleteOutlined, SettingOutlined } from "@ant-design/icons";
+import { Button, Popconfirm, Space, Table, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 import { Link } from "react-router-dom";
 import type { BusinessEntity } from "../types";
 
 type EntitiesTableProps = {
+  deletingEntityId?: string | null;
   entities: BusinessEntity[];
+  onDelete: (entity: BusinessEntity) => Promise<void>;
 };
 
-export default function EntitiesTable({ entities }: EntitiesTableProps) {
+export default function EntitiesTable({
+  deletingEntityId,
+  entities,
+  onDelete,
+}: EntitiesTableProps) {
   const columns: TableColumnsType<BusinessEntity> = [
     {
       title: "Nombre",
@@ -28,11 +34,28 @@ export default function EntitiesTable({ entities }: EntitiesTableProps) {
       title: "Acciones",
       key: "actions",
       render: (_, entity) => (
-        <Link to={`/entities/${entity.id}`}>
-          <Button icon={<SettingOutlined />} type="primary">
-            Gestionar
-          </Button>
-        </Link>
+        <Space wrap>
+          <Link to={`/entities/${entity.id}`}>
+            <Button icon={<SettingOutlined />} type="primary">
+              Gestionar
+            </Button>
+          </Link>
+          <Popconfirm
+            title="Eliminar entidad"
+            description="Se eliminará la entidad, sus campos y su tabla física."
+            okButtonProps={{
+              danger: true,
+              loading: deletingEntityId === entity.id,
+            }}
+            okText="Eliminar"
+            cancelText="Cancelar"
+            onConfirm={() => onDelete(entity)}
+          >
+            <Button danger icon={<DeleteOutlined />}>
+              Eliminar
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];

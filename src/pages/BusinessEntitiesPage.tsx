@@ -1,6 +1,10 @@
 import { Alert, Card, Col, Row, Spin, Statistic, Typography } from "antd";
 import { useEffect, useState } from "react";
-import { getEntities, createEntity } from "../services/entityService";
+import {
+  getEntities,
+  createEntity,
+  deleteEntity,
+} from "../services/entityService";
 import EntitiesTable from "../components/EntitiesTable";
 import EntityForm from "../components/EntityForm";
 import type { CreateEntityInput } from "../services/entityService";
@@ -12,6 +16,7 @@ export default function BusinessEntitiesPage() {
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [deletingEntityId, setDeletingEntityId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -36,6 +41,20 @@ export default function BusinessEntitiesPage() {
       setError("No fue posible crear la entidad de negocio.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDelete = async (entity: BusinessEntity) => {
+    try {
+      setError(null);
+      setDeletingEntityId(entity.id);
+      await deleteEntity(entity.id);
+      window.dispatchEvent(new Event("business-entities:changed"));
+      await load();
+    } catch {
+      setError("No fue posible eliminar la entidad de negocio.");
+    } finally {
+      setDeletingEntityId(null);
     }
   };
 
@@ -95,7 +114,11 @@ export default function BusinessEntitiesPage() {
           spinning={isLoading}
           description="Cargando entidades de negocio..."
         >
-          <EntitiesTable entities={entities} />
+          <EntitiesTable
+            deletingEntityId={deletingEntityId}
+            entities={entities}
+            onDelete={handleDelete}
+          />
         </Spin>
       </Card>
     </section>
