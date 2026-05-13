@@ -128,52 +128,54 @@ export default function BusinessEntityDetailPage() {
         spinning={isLoading}
         description="Cargando configuración de la entidad..."
       >
-        <div ref={summaryRef}>
-          <Card className="page-card">
-            <Flex align="flex-start" gap={16} justify="space-between" wrap>
-              <div>
-                <Text type="secondary" strong>
-                  Entidad de negocio
-                </Text>
-                <Title level={2}>
-                  {entity?.name || "Detalle de la entidad"}
-                </Title>
-              </div>
-              <PageGuide steps={steps} />
-            </Flex>
-            <Paragraph>
-              {entity?.description ||
-                "No se ha definido una descripción para esta entidad."}
-            </Paragraph>
-          </Card>
-        </div>
+        <div className="page-stack">
+          <div ref={summaryRef}>
+            <Card className="page-card">
+              <Flex align="flex-start" gap={16} justify="space-between" wrap>
+                <div>
+                  <Text type="secondary" strong>
+                    Entidad de negocio
+                  </Text>
+                  <Title level={2}>
+                    {entity?.name || "Detalle de la entidad"}
+                  </Title>
+                </div>
+                <PageGuide steps={steps} />
+              </Flex>
+              <Paragraph>
+                {entity?.description ||
+                  "No se ha definido una descripción para esta entidad."}
+              </Paragraph>
+            </Card>
+          </div>
 
-        <div ref={statsRef}>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12}>
-              <Card className="insight-card">
-                <Statistic title="Campos definidos" value={fields.length} />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Card className="insight-card">
-                <Statistic
-                  title="Módulo generado"
-                  value={entity ? "Listo" : "Pendiente"}
-                />
-              </Card>
-            </Col>
-          </Row>
-        </div>
+          <div ref={statsRef}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12}>
+                <Card className="insight-card">
+                  <Statistic title="Campos definidos" value={fields.length} />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Card className="insight-card">
+                  <Statistic
+                    title="Módulo generado"
+                    value={entity ? "Listo" : "Pendiente"}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </div>
 
-        <div ref={formRef}>
-          <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
-        </div>
+          <div ref={formRef}>
+            <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
+          </div>
 
-        <div ref={tableRef}>
-          <Card title="Campos definidos" className="section-card">
-            <FieldsTable fields={fields} />
-          </Card>
+          <div ref={tableRef}>
+            <Card title="Campos definidos" className="section-card">
+              <FieldsTable fields={fields} />
+            </Card>
+          </div>
         </div>
       </Spin>
     </section>
