@@ -1,4 +1,4 @@
-import type { AiBusinessSchemaResponse } from "../types";
+import type { AiBusinessSchemaPlan, AiBusinessSchemaResponse } from "../types";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -18,12 +18,22 @@ export type CreateSchemaFromPromptInput = {
   prompt: string;
 };
 
-export function createBusinessSchemaFromPrompt(
+export function createBusinessSchemaPlan(
   data: CreateSchemaFromPromptInput,
-): Promise<AiBusinessSchemaResponse> {
-  return request<AiBusinessSchemaResponse>("/ai/business-schema", {
+): Promise<AiBusinessSchemaPlan> {
+  return request<AiBusinessSchemaPlan>("/ai/business-schema/plan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+  });
+}
+
+export function executeBusinessSchemaPlan(
+  plan: AiBusinessSchemaPlan,
+): Promise<AiBusinessSchemaResponse> {
+  return request<AiBusinessSchemaResponse>("/ai/business-schema/execute", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(plan),
   });
 }

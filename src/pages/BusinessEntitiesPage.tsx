@@ -6,13 +6,20 @@ import {
   createEntity,
   deleteEntity,
 } from "../services/entityService";
-import { createBusinessSchemaFromPrompt } from "../services/aiBusinessSchemaService";
+import {
+  createBusinessSchemaPlan,
+  executeBusinessSchemaPlan,
+} from "../services/aiBusinessSchemaService";
 import AiBusinessSchemaForm from "../components/AiBusinessSchemaForm";
 import EntitiesTable from "../components/EntitiesTable";
 import EntityForm from "../components/EntityForm";
 import PageGuide from "../components/PageGuide";
 import type { CreateEntityInput } from "../services/entityService";
-import type { AiBusinessSchemaResponse, BusinessEntity } from "../types";
+import type {
+  AiBusinessSchemaPlan,
+  AiBusinessSchemaResponse,
+  BusinessEntity,
+} from "../types";
 
 const { Text, Title } = Typography;
 
@@ -20,10 +27,13 @@ export default function BusinessEntitiesPage() {
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [isGeneratingSchema, setIsGeneratingSchema] = useState(false);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [isExecutingPlan, setIsExecutingPlan] = useState(false);
   const [isAiSectionVisible, setIsAiSectionVisible] = useState(false);
   const [deletingEntityId, setDeletingEntityId] = useState<string | null>(null);
-  const [generatedSchema, setGeneratedSchema] =
+  const [generatedPlan, setGeneratedPlan] =
+    useState<AiBusinessSchemaPlan | null>(null);
+  const [executedSchema, setExecutedSchema] =
     useState<AiBusinessSchemaResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -89,19 +99,43 @@ export default function BusinessEntitiesPage() {
     }
   };
 
-  const handleGenerateSchema = async (prompt: string) => {
+  const handleGeneratePlan = async (prompt: string) => {
     try {
       setError(null);
-      setIsGeneratingSchema(true);
-      const schemaResponse = await createBusinessSchemaFromPrompt({ prompt });
-      setGeneratedSchema(schemaResponse);
+      setExecutedSchema(null);
+      setIsGeneratingPlan(true);
+      const planResponse = await createBusinessSchemaPlan({ prompt });
+      setGeneratedPlan(planResponse);
+    } catch {
+      setError("No fue posible generar el plan con el agente generativo.");
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
+
+  const handleAcceptPlan = async () => {
+    if (!generatedPlan) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setIsExecutingPlan(true);
+      const executionResponse = await executeBusinessSchemaPlan(generatedPlan);
+      setExecutedSchema(executionResponse);
+      setGeneratedPlan(null);
       window.dispatchEvent(new Event("business-entities:changed"));
       await load();
     } catch {
-      setError("No fue posible crear entidades con el agente generativo.");
+      setError("No fue posible ejecutar el plan del agente generativo.");
     } finally {
-      setIsGeneratingSchema(false);
+      setIsExecutingPlan(false);
     }
+  };
+
+  const handleRejectPlan = () => {
+    setGeneratedPlan(null);
+    setExecutedSchema(null);
   };
 
   const handleDelete = async (entity: BusinessEntity) => {
@@ -189,9 +223,13 @@ export default function BusinessEntitiesPage() {
       {isAiSectionVisible && (
         <div ref={aiFormRef}>
           <AiBusinessSchemaForm
-            generatedSchema={generatedSchema}
-            isGenerating={isGeneratingSchema}
-            onGenerate={handleGenerateSchema}
+            executedSchema={executedSchema}
+            generatedPlan={generatedPlan}
+            isExecuting={isExecutingPlan}
+            isGeneratingPlan={isGeneratingPlan}
+            onAcceptPlan={handleAcceptPlan}
+            onGeneratePlan={handleGeneratePlan}
+            onRejectPlan={handleRejectPlan}
           />
         </div>
       )}

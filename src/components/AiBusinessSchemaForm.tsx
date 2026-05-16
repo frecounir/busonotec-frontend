@@ -4,20 +4,30 @@ import {
   Button,
   Card,
   Collapse,
+  Divider,
   Form,
   Input,
   List,
+  Space,
   Tag,
   Typography,
 } from "antd";
-import type { AiBusinessSchemaResponse, EntityField } from "../types";
+import type {
+  AiBusinessSchemaPlan,
+  AiBusinessSchemaResponse,
+  EntityField,
+} from "../types";
 
 const { Paragraph, Text } = Typography;
 
 type AiBusinessSchemaFormProps = {
-  generatedSchema: AiBusinessSchemaResponse | null;
-  isGenerating: boolean;
-  onGenerate: (prompt: string) => Promise<void>;
+  executedSchema: AiBusinessSchemaResponse | null;
+  generatedPlan: AiBusinessSchemaPlan | null;
+  isExecuting: boolean;
+  isGeneratingPlan: boolean;
+  onAcceptPlan: () => Promise<void>;
+  onGeneratePlan: (prompt: string) => Promise<void>;
+  onRejectPlan: () => void;
 };
 
 type PromptFormValues = {
@@ -32,14 +42,18 @@ const fieldTypeLabels: Record<EntityField["type"], string> = {
 };
 
 export default function AiBusinessSchemaForm({
-  generatedSchema,
-  isGenerating,
-  onGenerate,
+  executedSchema,
+  generatedPlan,
+  isExecuting,
+  isGeneratingPlan,
+  onAcceptPlan,
+  onGeneratePlan,
+  onRejectPlan,
 }: AiBusinessSchemaFormProps) {
   const [form] = Form.useForm<PromptFormValues>();
 
   const submit = async (values: PromptFormValues) => {
-    await onGenerate(values.prompt.trim());
+    await onGeneratePlan(values.prompt.trim());
     form.resetFields();
   };
 
@@ -85,18 +99,61 @@ export default function AiBusinessSchemaForm({
         <Button
           htmlType="submit"
           icon={<RobotOutlined />}
-          loading={isGenerating}
+          loading={isGeneratingPlan}
           type="primary"
         >
-          Generar entidades
+          Generar plan
         </Button>
       </Form>
 
-      {generatedSchema && (
+      {generatedPlan && (
         <div className="ai-schema-result">
+          <Text strong>Plan propuesto por el agente</Text>
+          <Paragraph>
+            Revisa esta propuesta antes de crear entidades reales. Si algo no
+            corresponde con tu negocio, puedes rechazarla y escribir una
+            descripción más precisa.
+          </Paragraph>
+          <Collapse
+            items={generatedPlan.businessEntities.map((entityDefinition) => ({
+              key: entityDefinition.name,
+              label: entityDefinition.name,
+              children: (
+                <>
+                  <Paragraph>{entityDefinition.description}</Paragraph>
+                  <List
+                    dataSource={entityDefinition.fields ?? []}
+                    locale={{
+                      emptyText: "La entidad fue propuesta sin campos.",
+                    }}
+                    renderItem={(field) => (
+                      <List.Item>
+                        <Text>{field.name}</Text>
+                        <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                      </List.Item>
+                    )}
+                  />
+                </>
+              ),
+            }))}
+          />
+          <Space wrap>
+            <Button loading={isExecuting} onClick={onAcceptPlan} type="primary">
+              Aceptar y crear entidades
+            </Button>
+            <Button disabled={isExecuting} onClick={onRejectPlan}>
+              Rechazar plan
+            </Button>
+          </Space>
+        </div>
+      )}
+
+      {executedSchema && (
+        <div className="ai-schema-result">
+          <Divider />
           <Text strong>Resultado creado por el agente</Text>
           <Collapse
-            items={generatedSchema.createdBusinessEntities.map(
+            items={executedSchema.createdBusinessEntities.map(
               (createdEntity) => ({
                 key: createdEntity.businessEntity.id,
                 label: createdEntity.businessEntity.name,
