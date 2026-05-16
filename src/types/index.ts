@@ -20,3 +20,28 @@ export type EntityRecordPayload = Record<string, EntityRecordValue>;
 export type EntityRecord = EntityRecordPayload & {
   id: string;
 };
+
+export type AiEntityFieldDefinition = {
+  name: string;
+  type: EntityFieldType;
+};
+
+export type AiBusinessEntityDefinition = {
+  name: string;
+  description: string;
+  fields?: AiEntityFieldDefinition[];
+};
+
+export type AiBusinessSchemaPlan = {
+  businessEntities: AiBusinessEntityDefinition[];
+};
+
+export type CreatedBusinessEntity = {
+  businessEntity: BusinessEntity;
+  fields: EntityField[];
+};
+
+export type AiBusinessSchemaResponse = {
+  plan: AiBusinessSchemaPlan;
+  createdBusinessEntities: CreatedBusinessEntity[];
+};

@@ -1,15 +1,19 @@
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
 import { Button, Card, Form, Input } from "antd";
 import type { CreateEntityInput } from "../services/entityService";
 
 type EntityFormProps = {
+  isAiSectionVisible: boolean;
   isSubmitting: boolean;
   onCreate: (data: CreateEntityInput) => Promise<void>;
+  onToggleAiSection: () => void;
 };
 
 export default function EntityForm({
+  isAiSectionVisible,
   isSubmitting,
   onCreate,
+  onToggleAiSection,
 }: EntityFormProps) {
   const [form] = Form.useForm<CreateEntityInput>();
 
@@ -22,7 +26,17 @@ export default function EntityForm({
   };
 
   return (
-    <Card title="Crear entidad de negocio" className="section-card">
+    <Card
+      title="Crear entidad de negocio"
+      className="section-card"
+      extra={
+        <Button icon={<RobotOutlined />} onClick={onToggleAiSection}>
+          {isAiSectionVisible
+            ? "Ocultar agente generativo"
+            : "Usar agente generativo"}
+        </Button>
+      }
+    >
       <Form form={form} layout="vertical" onFinish={submit}>
         <div className="form-grid">
           <Form.Item

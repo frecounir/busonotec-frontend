@@ -6,11 +6,13 @@ import {
   createEntity,
   deleteEntity,
 } from "../services/entityService";
+import { createBusinessSchemaFromPrompt } from "../services/aiBusinessSchemaService";
+import AiBusinessSchemaForm from "../components/AiBusinessSchemaForm";
 import EntitiesTable from "../components/EntitiesTable";
 import EntityForm from "../components/EntityForm";
 import PageGuide from "../components/PageGuide";
 import type { CreateEntityInput } from "../services/entityService";
-import type { BusinessEntity } from "../types";
+import type { AiBusinessSchemaResponse, BusinessEntity } from "../types";
 
 const { Text, Title } = Typography;
 
@@ -18,10 +20,15 @@ export default function BusinessEntitiesPage() {
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isGeneratingSchema, setIsGeneratingSchema] = useState(false);
+  const [isAiSectionVisible, setIsAiSectionVisible] = useState(false);
   const [deletingEntityId, setDeletingEntityId] = useState<string | null>(null);
+  const [generatedSchema, setGeneratedSchema] =
+    useState<AiBusinessSchemaResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const aiFormRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const steps: TourProps["steps"] = [
@@ -38,7 +45,13 @@ export default function BusinessEntitiesPage() {
       target: () => statsRef.current as HTMLElement,
     },
     {
-      title: "Crea una entidad",
+      title: "Usa el agente generativo",
+      description:
+        "Dentro de la tarjeta de creación manual encontrarás el botón Usar agente generativo. Al presionarlo se abre una sección opcional para describir el proceso en lenguaje natural y crear varias entidades con sus campos automáticamente.",
+      target: () => formRef.current as HTMLElement,
+    },
+    {
+      title: "Crea una entidad manualmente",
       description:
         "Para crear una entidad, escribe un nombre claro y una descripción breve. Por ejemplo: nombre Estudiantes y descripción Personas inscritas en actividades académicas. No hace falta saber de programación; basta con describir el concepto del negocio.",
       target: () => formRef.current as HTMLElement,
@@ -73,6 +86,21 @@ export default function BusinessEntitiesPage() {
       setError("No fue posible crear la entidad de negocio.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleGenerateSchema = async (prompt: string) => {
+    try {
+      setError(null);
+      setIsGeneratingSchema(true);
+      const schemaResponse = await createBusinessSchemaFromPrompt({ prompt });
+      setGeneratedSchema(schemaResponse);
+      window.dispatchEvent(new Event("business-entities:changed"));
+      await load();
+    } catch {
+      setError("No fue posible crear entidades con el agente generativo.");
+    } finally {
+      setIsGeneratingSchema(false);
     }
   };
 
@@ -148,8 +176,25 @@ export default function BusinessEntitiesPage() {
       </div>
 
       <div ref={formRef}>
-        <EntityForm isSubmitting={isCreating} onCreate={handleCreate} />
+        <EntityForm
+          isAiSectionVisible={isAiSectionVisible}
+          isSubmitting={isCreating}
+          onCreate={handleCreate}
+          onToggleAiSection={() =>
+            setIsAiSectionVisible((currentValue) => !currentValue)
+          }
+        />
       </div>
+
+      {isAiSectionVisible && (
+        <div ref={aiFormRef}>
+          <AiBusinessSchemaForm
+            generatedSchema={generatedSchema}
+            isGenerating={isGeneratingSchema}
+            onGenerate={handleGenerateSchema}
+          />
+        </div>
+      )}
 
       {error && <Alert title={error} type="error" showIcon />}
 

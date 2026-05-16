@@ -175,6 +175,16 @@ body {
   gap: 16px;
 }
 
+.ai-schema-form {
+  margin-top: 18px;
+}
+
+.ai-schema-result {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
 .form-action {
   min-width: 160px;
 }
