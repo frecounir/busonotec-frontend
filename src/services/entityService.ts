@@ -22,15 +22,15 @@ export type CreateEntityInput = {
 };
 
 export function getEntities(): Promise<BusinessEntity[]> {
-  return request<BusinessEntity[]>("/entities");
+  return request<BusinessEntity[]>("/business-entities");
 }
 
 export function getEntityById(id: string): Promise<BusinessEntity> {
-  return request<BusinessEntity>(`/entities/${id}`);
+  return request<BusinessEntity>(`/business-entities/${id}`);
 }
 
 export function createEntity(data: CreateEntityInput): Promise<BusinessEntity> {
-  return request<BusinessEntity>("/entities", {
+  return request<BusinessEntity>("/business-entities", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -38,7 +38,7 @@ export function createEntity(data: CreateEntityInput): Promise<BusinessEntity> {
 }
 
 export function deleteEntity(id: string): Promise<void> {
-  return request<void>(`/entities/${id}`, {
+  return request<void>(`/business-entities/${id}`, {
     method: "DELETE",
   });
 }

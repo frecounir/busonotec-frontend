@@ -19,11 +19,11 @@ export type CreateFieldInput = {
 };
 
 export function getFields(entityId: string): Promise<EntityField[]> {
-  return request<EntityField[]>(`/entities/${entityId}/fields`);
+  return request<EntityField[]>(`/entity-fields/${entityId}`);
 }
 
 export function createField(data: CreateFieldInput): Promise<EntityField> {
-  return request<EntityField>("/fields", {
+  return request<EntityField>("/entity-fields", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
