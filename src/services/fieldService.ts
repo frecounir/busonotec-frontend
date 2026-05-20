@@ -1,6 +1,5 @@
 import type { EntityField } from "../types";
-
-const API_BASE_URL = "http://localhost:8080/api";
+import { API_BASE_URL } from "./apiConfig";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${url}`, options);
