@@ -3,7 +3,7 @@ import type { TourProps } from "antd";
 import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { getEntityById } from "../services/entityService";
-import { getFields, createField } from "../services/fieldService";
+import { createField, deleteField, getFields } from "../services/fieldService";
 import FieldsTable from "../components/FieldsTable";
 import FieldForm from "../components/FieldForm";
 import PageGuide from "../components/PageGuide";
@@ -18,6 +18,7 @@ export default function BusinessEntityDetailPage() {
   const [fields, setFields] = useState<EntityField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
@@ -45,7 +46,7 @@ export default function BusinessEntityDetailPage() {
     {
       title: "Valida la estructura",
       description:
-        "Esta tabla funciona como una vista previa de la estructura de la entidad. Si aquí aparecen los campos correctos, la pantalla generada de gestión podrá pedir y mostrar la información adecuada para cada registro.",
+        "Esta tabla funciona como una vista previa de la estructura de la entidad. Si aquí aparecen los campos correctos, la pantalla generada de gestión podrá pedir y mostrar la información adecuada para cada registro. También puedes eliminar un campo si ya no debe formar parte de la información que se guarda.",
       target: () => tableRef.current as HTMLElement,
     },
   ];
@@ -85,6 +86,19 @@ export default function BusinessEntityDetailPage() {
       setError("No fue posible crear el campo.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDeleteField = async (field: EntityField) => {
+    try {
+      setError(null);
+      setIsDeleting(true);
+      await deleteField(field.id);
+      await load();
+    } catch {
+      setError("No fue posible eliminar el campo.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -173,7 +187,11 @@ export default function BusinessEntityDetailPage() {
 
           <div ref={tableRef}>
             <Card title="Campos definidos" className="section-card">
-              <FieldsTable fields={fields} />
+              <FieldsTable
+                fields={fields}
+                isDeleting={isDeleting}
+                onDelete={handleDeleteField}
+              />
             </Card>
           </div>
         </div>

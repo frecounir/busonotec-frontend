@@ -8,6 +8,10 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error("No fue posible completar la solicitud de campos.");
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -26,5 +30,11 @@ export function createField(data: CreateFieldInput): Promise<EntityField> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+  });
+}
+
+export function deleteField(id: string): Promise<void> {
+  return request<void>(`/entity-fields/${id}`, {
+    method: "DELETE",
   });
 }
