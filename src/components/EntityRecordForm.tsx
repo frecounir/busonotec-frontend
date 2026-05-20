@@ -26,14 +26,79 @@ type FormValues = Record<
   string | number | boolean | Dayjs | null | undefined
 >;
 
+type EntityRecordWithOptionalValues = EntityRecord & {
+  values?: Record<string, unknown>;
+};
+
+function normalizeRecordKey(key: string) {
+  return key
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]/g, "")
+    .toLowerCase();
+}
+
+function findValueByFieldName(
+  source: Record<string, unknown>,
+  fieldName: string,
+) {
+  if (Object.prototype.hasOwnProperty.call(source, fieldName)) {
+    return source[fieldName];
+  }
+
+  const caseInsensitiveKey = Object.keys(source).find(
+    (key) => key.toLowerCase() === fieldName.toLowerCase(),
+  );
+
+  if (caseInsensitiveKey) {
+    return source[caseInsensitiveKey];
+  }
+
+  const normalizedFieldName = normalizeRecordKey(fieldName);
+  const normalizedKey = Object.keys(source).find(
+    (key) => normalizeRecordKey(key) === normalizedFieldName,
+  );
+
+  return normalizedKey ? source[normalizedKey] : undefined;
+}
+
+function getRecordFieldValue(record: EntityRecord | null, fieldName: string) {
+  if (!record) {
+    return undefined;
+  }
+
+  const recordSource = record as Record<string, unknown>;
+  const value = findValueByFieldName(recordSource, fieldName);
+
+  if (value !== undefined) {
+    return value;
+  }
+
+  const nestedValues = (record as EntityRecordWithOptionalValues).values;
+
+  if (nestedValues && typeof nestedValues === "object") {
+    return findValueByFieldName(nestedValues, fieldName);
+  }
+
+  return undefined;
+}
+
 function getInitialValue(field: EntityField, record: EntityRecord | null) {
-  const value = record?.[field.name];
+  const value = getRecordFieldValue(record, field.name);
 
   if (field.type === "date" && typeof value === "string") {
     return dayjs(value);
   }
 
-  return value ?? (field.type === "boolean" ? false : undefined);
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+
+  return field.type === "boolean" ? false : undefined;
 }
 
 function normalizeValues(
