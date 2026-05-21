@@ -1,4 +1,8 @@
-import type { EntityField } from "../types";
+import type {
+  EntityField,
+  EntityFieldType,
+  EntityFieldValidation,
+} from "../types";
 import { API_BASE_URL } from "./apiConfig";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -17,9 +21,9 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 export type CreateFieldInput = {
   name: string;
-  type: string;
+  type: EntityFieldType;
   businessEntityId: string;
-};
+} & EntityFieldValidation;
 
 export function getFields(entityId: string): Promise<EntityField[]> {
   return request<EntityField[]>(`/entity-fields/${entityId}`);

@@ -10,7 +10,8 @@ import {
 } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { validateRecordValues } from "../services/validationService";
 import type { EntityField, EntityRecord, EntityRecordPayload } from "../types";
 
 type EntityRecordFormProps = {
@@ -113,6 +114,11 @@ function normalizeValues(
       return recordValues;
     }
 
+    if (value === "") {
+      recordValues[field.name] = null;
+      return recordValues;
+    }
+
     recordValues[field.name] =
       typeof value === "string" ||
       typeof value === "number" ||
@@ -125,7 +131,13 @@ function normalizeValues(
 
 function renderFieldInput(field: EntityField) {
   if (field.type === "number") {
-    return <InputNumber style={{ width: "100%" }} />;
+    return (
+      <InputNumber
+        max={field.maxValue ?? undefined}
+        min={field.minValue ?? undefined}
+        style={{ width: "100%" }}
+      />
+    );
   }
 
   if (field.type === "boolean") {
@@ -133,10 +145,21 @@ function renderFieldInput(field: EntityField) {
   }
 
   if (field.type === "date") {
-    return <DatePicker style={{ width: "100%" }} />;
+    return (
+      <DatePicker
+        disabledDate={(currentDate) =>
+          Boolean(
+            (field.minDate &&
+              currentDate.isBefore(dayjs(field.minDate), "day")) ||
+            (field.maxDate && currentDate.isAfter(dayjs(field.maxDate), "day")),
+          )
+        }
+        style={{ width: "100%" }}
+      />
+    );
   }
 
-  return <Input />;
+  return <Input maxLength={field.maxLength ?? undefined} />;
 }
 
 export default function EntityRecordForm({
@@ -147,19 +170,68 @@ export default function EntityRecordForm({
   onSubmit,
 }: EntityRecordFormProps) {
   const [form] = Form.useForm<FormValues>();
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     const initialValues = fields.reduce<FormValues>((values, field) => {
       values[field.name] = getInitialValue(field, editingRecord);
       return values;
     }, {});
+    const initialIsFormValid =
+      validateRecordValues(fields, normalizeValues(fields, initialValues))
+        .length === 0;
 
     form.setFieldsValue(initialValues);
+    form.setFields(fields.map((field) => ({ errors: [], name: field.name })));
+
+    const timeoutId = window.setTimeout(() => {
+      setIsFormValid(initialIsFormValid);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [editingRecord, fields, form]);
 
   const submit = async (values: FormValues) => {
-    await onSubmit(normalizeValues(fields, values));
+    const validationErrors = syncValidationErrors(values);
+
+    if (validationErrors.length > 0) {
+      return;
+    }
+
+    const recordValues = normalizeValues(fields, values);
+    await onSubmit(recordValues);
     form.resetFields();
+    setIsFormValid(false);
+  };
+
+  const syncValidationErrors = (values: FormValues) => {
+    const recordValues = normalizeValues(fields, values);
+    const validationErrors = validateRecordValues(fields, recordValues);
+    const errorsByField = validationErrors.reduce<Record<string, string[]>>(
+      (errors, error) => {
+        errors[error.name] = [...(errors[error.name] ?? []), error.message];
+        return errors;
+      },
+      {},
+    );
+
+    form.setFields(
+      fields.map((field) => ({
+        errors: errorsByField[field.name] ?? [],
+        name: field.name,
+      })),
+    );
+
+    setIsFormValid(validationErrors.length === 0);
+
+    return validationErrors;
+  };
+
+  const handleValuesChange = (
+    _changedValues: FormValues,
+    values: FormValues,
+  ) => {
+    syncValidationErrors(values);
   };
 
   return (
@@ -167,26 +239,30 @@ export default function EntityRecordForm({
       className="section-card"
       title={editingRecord ? "Actualizar registro" : "Crear registro"}
     >
-      <Form form={form} layout="vertical" onFinish={submit}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={submit}
+        onValuesChange={handleValuesChange}
+      >
         {fields.map((field) => (
           <Form.Item
             key={field.id}
             label={field.name}
             name={field.name}
             valuePropName={field.type === "boolean" ? "checked" : "value"}
-            rules={[
-              {
-                required: field.type !== "boolean",
-                message: `Ingresa ${field.name}.`,
-              },
-            ]}
           >
             {renderFieldInput(field)}
           </Form.Item>
         ))}
 
         <Space wrap>
-          <Button htmlType="submit" loading={isSubmitting} type="primary">
+          <Button
+            disabled={!isFormValid || isSubmitting}
+            htmlType="submit"
+            loading={isSubmitting}
+            type="primary"
+          >
             {editingRecord ? "Actualizar" : "Crear"}
           </Button>
           {editingRecord && <Button onClick={onCancelEdit}>Cancelar</Button>}

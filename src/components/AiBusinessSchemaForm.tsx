@@ -13,6 +13,7 @@ import {
   Typography,
 } from "antd";
 import type {
+  AiEntityFieldDefinition,
   AiBusinessSchemaPlan,
   AiBusinessSchemaResponse,
   EntityField,
@@ -40,6 +41,54 @@ const fieldTypeLabels: Record<EntityField["type"], string> = {
   boolean: "Verdadero/Falso",
   date: "Fecha",
 };
+
+type FieldDefinitionWithValidations = EntityField | AiEntityFieldDefinition;
+
+function hasNumberValidation(
+  value: number | null | undefined,
+): value is number {
+  return typeof value === "number";
+}
+
+function renderValidationTags(field: FieldDefinitionWithValidations) {
+  const tags = [];
+
+  if (field.required) {
+    tags.push(<Tag key="required">Obligatorio</Tag>);
+  }
+
+  if (field.type === "string") {
+    if (hasNumberValidation(field.minLength)) {
+      tags.push(<Tag key="minLength">Mínimo {field.minLength}</Tag>);
+    }
+
+    if (hasNumberValidation(field.maxLength)) {
+      tags.push(<Tag key="maxLength">Máximo {field.maxLength}</Tag>);
+    }
+  }
+
+  if (field.type === "number") {
+    if (hasNumberValidation(field.minValue)) {
+      tags.push(<Tag key="minValue">Desde {field.minValue}</Tag>);
+    }
+
+    if (hasNumberValidation(field.maxValue)) {
+      tags.push(<Tag key="maxValue">Hasta {field.maxValue}</Tag>);
+    }
+  }
+
+  if (field.type === "date") {
+    if (field.minDate) {
+      tags.push(<Tag key="minDate">Desde {field.minDate}</Tag>);
+    }
+
+    if (field.maxDate) {
+      tags.push(<Tag key="maxDate">Hasta {field.maxDate}</Tag>);
+    }
+  }
+
+  return tags;
+}
 
 export default function AiBusinessSchemaForm({
   executedSchema,
@@ -71,7 +120,7 @@ export default function AiBusinessSchemaForm({
         showIcon
         type="info"
         title="Ejemplo"
-        description="Crea entidades para estudiantes y actividades. Los estudiantes necesitan nombre, correo y activo. Las actividades necesitan título, fecha de inicio y duración."
+        description="Crea entidades para estudiantes y actividades. Los estudiantes necesitan nombre obligatorio, correo y activo. Las actividades necesitan título de máximo 120 caracteres, fecha de inicio desde 2026-01-01 y duración entre 1 y 8."
       />
 
       <Form
@@ -128,8 +177,11 @@ export default function AiBusinessSchemaForm({
                     }}
                     renderItem={(field) => (
                       <List.Item>
-                        <Text>{field.name}</Text>
-                        <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                        <Space wrap>
+                          <Text>{field.name}</Text>
+                          <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                          {renderValidationTags(field)}
+                        </Space>
                       </List.Item>
                     )}
                   />
@@ -163,8 +215,11 @@ export default function AiBusinessSchemaForm({
                     locale={{ emptyText: "La entidad fue creada sin campos." }}
                     renderItem={(field) => (
                       <List.Item>
-                        <Text>{field.name}</Text>
-                        <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                        <Space wrap>
+                          <Text>{field.name}</Text>
+                          <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                          {renderValidationTags(field)}
+                        </Space>
                       </List.Item>
                     )}
                   />

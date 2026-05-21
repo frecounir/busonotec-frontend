@@ -168,10 +168,16 @@ body {
   gap: 16px;
 }
 
-.field-form-grid {
+.field-base-grid {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 180px auto;
+  grid-template-columns: minmax(180px, 1fr) 180px 150px auto;
   align-items: end;
+  gap: 16px;
+}
+
+.field-validation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
   gap: 16px;
 }
 
@@ -228,7 +234,8 @@ body {
   }
 
   .form-grid,
-  .field-form-grid,
+  .field-base-grid,
+  .field-validation-grid,
   .management-grid {
     grid-template-columns: 1fr;
   }

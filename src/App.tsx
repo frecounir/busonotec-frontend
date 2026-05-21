@@ -133,8 +133,8 @@ function AppLayout() {
         onClose={() => setIsMenuOpen(false)}
         open={isMenuOpen}
         placement="left"
+        size={300}
         title={null}
-        width={300}
       >
         {navigationMenu}
       </Drawer>

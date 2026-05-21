@@ -1,5 +1,15 @@
 export type EntityFieldType = "string" | "number" | "boolean" | "date";
 
+export type EntityFieldValidation = {
+  required?: boolean;
+  minLength?: number | null;
+  maxLength?: number | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  minDate?: string | null;
+  maxDate?: string | null;
+};
+
 export type BusinessEntity = {
   id: string;
   name: string;
@@ -11,7 +21,7 @@ export type EntityField = {
   name: string;
   type: EntityFieldType;
   businessEntityId: string;
-};
+} & EntityFieldValidation;
 
 export type EntityRecordValue = string | number | boolean | null;
 
@@ -24,7 +34,7 @@ export type EntityRecord = EntityRecordPayload & {
 export type AiEntityFieldDefinition = {
   name: string;
   type: EntityFieldType;
-};
+} & EntityFieldValidation;
 
 export type AiBusinessEntityDefinition = {
   name: string;

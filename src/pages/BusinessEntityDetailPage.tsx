@@ -40,7 +40,7 @@ export default function BusinessEntityDetailPage() {
     {
       title: "Agrega campos dinámicos",
       description:
-        "Un campo es un dato específico que quieres guardar. Por ejemplo, para Estudiantes podrías crear nombre como Texto, puntaje como Número, fecha_ingreso como Fecha y activo como Verdadero/Falso. Estos campos serán usados para crear el formulario automáticamente.",
+        "Un campo es un dato específico que quieres guardar. Por ejemplo, para Estudiantes podrías crear nombre como Texto, puntaje como Número, fecha_ingreso como Fecha y activo como Verdadero/Falso. También puedes definir si es obligatorio y agregar reglas simples como longitudes, rangos numéricos o fechas permitidas.",
       target: () => formRef.current as HTMLElement,
     },
     {
