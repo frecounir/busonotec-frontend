@@ -1,23 +1,26 @@
 import dayjs from "dayjs";
 import { z } from "zod";
-import type { CreateEntityInput } from "./entityService";
-import type { CreateFieldInput } from "./fieldService";
-import type { EntityField, EntityRecordPayload } from "../types";
+import type {
+  CreateEntityInput,
+  CreateFieldInput,
+  EntityField,
+  EntityRecordPayload,
+} from "../types";
 
 export type ValidationError = {
   name: string;
   message: string;
 };
 
-const FIELD_NAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{0,62}$/;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const IDENTIFIER_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{0,62}$/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const fieldNameSchema = z
   .string({ error: "Ingresa el nombre del campo." })
   .trim()
   .min(1, { error: "Ingresa el nombre del campo." })
   .max(63, { error: "El nombre debe tener máximo 63 caracteres." })
-  .regex(FIELD_NAME_PATTERN, {
+  .regex(IDENTIFIER_PATTERN, {
     error:
       "Usa solo letras, números y guiones bajos. El nombre debe iniciar con una letra.",
   });
@@ -27,7 +30,7 @@ const businessEntityNameSchema = z
   .trim()
   .min(1, { error: "Ingresa el nombre de la entidad." })
   .max(63, { error: "El nombre debe tener máximo 63 caracteres." })
-  .regex(FIELD_NAME_PATTERN, {
+  .regex(IDENTIFIER_PATTERN, {
     error:
       "Usa solo letras, números y guiones bajos. El nombre debe iniciar con una letra.",
   });
@@ -49,7 +52,7 @@ const optionalNumberSchema = z
 
 const optionalDateSchema = z
   .string({ error: "Ingresa una fecha válida." })
-  .regex(DATE_PATTERN, { error: "Usa una fecha válida." })
+  .regex(ISO_DATE_PATTERN, { error: "Usa una fecha válida." })
   .optional();
 
 const createFieldSchema = z
@@ -177,7 +180,7 @@ function buildDateRecordSchema(field: EntityField) {
         ? `Ingresa ${field.name}.`
         : `${field.name} no es válido.`,
     })
-    .regex(DATE_PATTERN, { error: "Usa una fecha válida." });
+    .regex(ISO_DATE_PATTERN, { error: "Usa una fecha válida." });
 
   if (field.minDate) {
     schema = schema.refine(

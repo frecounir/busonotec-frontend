@@ -15,12 +15,10 @@ import { useParams } from "react-router-dom";
 import EntityRecordForm from "../components/EntityRecordForm";
 import EntityRecordsTable from "../components/EntityRecordsTable";
 import PageGuide from "../components/PageGuide";
-import { getEntityById } from "../services/entityService";
-import { getFields } from "../services/fieldService";
+import { getBusinessEntityManagementData } from "../services/businessEntityConfigurationService";
 import {
   createEntityRecord,
   deleteEntityRecord,
-  getEntityRecords,
   updateEntityRecord,
 } from "../services/entityRecordService";
 import type {
@@ -79,15 +77,11 @@ export default function BusinessEntityManagementPage() {
     setError(null);
     setIsLoadingConfiguration(true);
     try {
-      const [entityResponse, fieldsResponse, recordsResponse] =
-        await Promise.all([
-          getEntityById(businessEntityId),
-          getFields(businessEntityId),
-          getEntityRecords(businessEntityId),
-        ]);
-      setEntity(entityResponse);
-      setFields(fieldsResponse);
-      setRecords(recordsResponse);
+      const managementData =
+        await getBusinessEntityManagementData(businessEntityId);
+      setEntity(managementData.entity);
+      setFields(managementData.fields);
+      setRecords(managementData.records);
     } catch {
       setError("No fue posible cargar los datos de la entidad seleccionada.");
     } finally {
@@ -148,16 +142,12 @@ export default function BusinessEntityManagementPage() {
 
     let isActive = true;
 
-    Promise.all([
-      getEntityById(entityId),
-      getFields(entityId),
-      getEntityRecords(entityId),
-    ])
-      .then(([entityResponse, fieldsResponse, recordsResponse]) => {
+    getBusinessEntityManagementData(entityId)
+      .then((managementData) => {
         if (isActive) {
-          setEntity(entityResponse);
-          setFields(fieldsResponse);
-          setRecords(recordsResponse);
+          setEntity(managementData.entity);
+          setFields(managementData.fields);
+          setRecords(managementData.records);
           setEditingRecord(null);
         }
       })

@@ -14,12 +14,13 @@ import AiBusinessSchemaForm from "../components/AiBusinessSchemaForm";
 import EntitiesTable from "../components/EntitiesTable";
 import EntityForm from "../components/EntityForm";
 import PageGuide from "../components/PageGuide";
-import type { CreateEntityInput } from "../services/entityService";
 import type {
   AiBusinessSchemaPlan,
   AiBusinessSchemaResponse,
   BusinessEntity,
+  CreateEntityInput,
 } from "../types";
+import { notifyBusinessEntitiesChanged } from "../utils/businessEntityEvents";
 
 const { Text, Title } = Typography;
 
@@ -90,7 +91,7 @@ export default function BusinessEntitiesPage() {
       setError(null);
       setIsCreating(true);
       await createEntity(data);
-      window.dispatchEvent(new Event("business-entities:changed"));
+      notifyBusinessEntitiesChanged();
       await load();
     } catch {
       setError("No fue posible crear la entidad de negocio.");
@@ -124,7 +125,7 @@ export default function BusinessEntitiesPage() {
       const executionResponse = await executeBusinessSchemaPlan(generatedPlan);
       setExecutedSchema(executionResponse);
       setGeneratedPlan(null);
-      window.dispatchEvent(new Event("business-entities:changed"));
+      notifyBusinessEntitiesChanged();
       await load();
     } catch {
       setError("No fue posible ejecutar el plan del agente generativo.");
@@ -143,7 +144,7 @@ export default function BusinessEntitiesPage() {
       setError(null);
       setDeletingEntityId(entity.id);
       await deleteEntity(entity.id);
-      window.dispatchEvent(new Event("business-entities:changed"));
+      notifyBusinessEntitiesChanged();
       await load();
     } catch {
       setError("No fue posible eliminar la entidad de negocio.");

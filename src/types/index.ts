@@ -16,8 +16,19 @@ export type BusinessEntity = {
   description?: string;
 };
 
+export type CreateEntityInput = {
+  name: string;
+  description?: string;
+};
+
 export type EntityField = {
   id: string;
+  name: string;
+  type: EntityFieldType;
+  businessEntityId: string;
+} & EntityFieldValidation;
+
+export type CreateFieldInput = {
   name: string;
   type: EntityFieldType;
   businessEntityId: string;
@@ -26,6 +37,8 @@ export type EntityField = {
 export type EntityRecordValue = string | number | boolean | null;
 
 export type EntityRecordPayload = Record<string, EntityRecordValue>;
+
+export type SaveEntityRecordInput = EntityRecordPayload;
 
 export type EntityRecord = EntityRecordPayload & {
   id: string;

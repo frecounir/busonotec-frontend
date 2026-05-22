@@ -2,6 +2,7 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Space, Table, Tag, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 import type { EntityField } from "../types";
+import { FIELD_TYPE_LABELS, getValidationLabels } from "../utils/fieldMetadata";
 
 type FieldsTableProps = {
   fields: EntityField[];
@@ -9,59 +10,14 @@ type FieldsTableProps = {
   onDelete: (field: EntityField) => Promise<void>;
 };
 
-const fieldTypeLabels: Record<EntityField["type"], string> = {
-  string: "Texto",
-  number: "Número",
-  boolean: "Verdadero/Falso",
-  date: "Fecha",
-};
-
-function hasNumberValidation(
-  value: number | null | undefined,
-): value is number {
-  return typeof value === "number";
-}
-
 function renderValidationSummary(field: EntityField) {
-  const tags = [];
+  const validationLabels = getValidationLabels(field);
 
-  if (field.required) {
-    tags.push(<Tag key="required">Obligatorio</Tag>);
-  }
-
-  if (field.type === "string") {
-    if (hasNumberValidation(field.minLength)) {
-      tags.push(<Tag key="minLength">Mínimo {field.minLength} caracteres</Tag>);
-    }
-
-    if (hasNumberValidation(field.maxLength)) {
-      tags.push(<Tag key="maxLength">Máximo {field.maxLength} caracteres</Tag>);
-    }
-  }
-
-  if (field.type === "number") {
-    if (hasNumberValidation(field.minValue)) {
-      tags.push(<Tag key="minValue">Mínimo {field.minValue}</Tag>);
-    }
-
-    if (hasNumberValidation(field.maxValue)) {
-      tags.push(<Tag key="maxValue">Máximo {field.maxValue}</Tag>);
-    }
-  }
-
-  if (field.type === "date") {
-    if (field.minDate) {
-      tags.push(<Tag key="minDate">Desde {field.minDate}</Tag>);
-    }
-
-    if (field.maxDate) {
-      tags.push(<Tag key="maxDate">Hasta {field.maxDate}</Tag>);
-    }
-  }
-
-  return tags.length > 0 ? (
+  return validationLabels.length > 0 ? (
     <Space size={[0, 8]} wrap>
-      {tags}
+      {validationLabels.map((label) => (
+        <Tag key={label}>{label}</Tag>
+      ))}
     </Space>
   ) : (
     <Typography.Text type="secondary">Sin validaciones</Typography.Text>
@@ -84,7 +40,7 @@ export default function FieldsTable({
       dataIndex: "type",
       key: "type",
       render: (type: EntityField["type"]) => (
-        <Tag color="cyan">{fieldTypeLabels[type]}</Tag>
+        <Tag color="cyan">{FIELD_TYPE_LABELS[type]}</Tag>
       ),
     },
     {

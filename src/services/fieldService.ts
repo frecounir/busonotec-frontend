@@ -1,44 +1,23 @@
-import type {
-  EntityField,
-  EntityFieldType,
-  EntityFieldValidation,
-} from "../types";
-import { API_BASE_URL } from "./apiConfig";
+import type { CreateFieldInput, EntityField } from "../types";
+import { apiClient } from "./httpClient";
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-
-  if (!response.ok) {
-    throw new Error("No fue posible completar la solicitud de campos.");
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
-}
-
-export type CreateFieldInput = {
-  name: string;
-  type: EntityFieldType;
-  businessEntityId: string;
-} & EntityFieldValidation;
+const FIELD_ERROR_MESSAGE = "No fue posible completar la solicitud de campos.";
 
 export function getFields(entityId: string): Promise<EntityField[]> {
-  return request<EntityField[]>(`/entity-fields/${entityId}`);
+  return apiClient.get<EntityField[]>(
+    `/entity-fields/${entityId}`,
+    FIELD_ERROR_MESSAGE,
+  );
 }
 
 export function createField(data: CreateFieldInput): Promise<EntityField> {
-  return request<EntityField>("/entity-fields", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return apiClient.post<EntityField>(
+    "/entity-fields",
+    data,
+    FIELD_ERROR_MESSAGE,
+  );
 }
 
 export function deleteField(id: string): Promise<void> {
-  return request<void>(`/entity-fields/${id}`, {
-    method: "DELETE",
-  });
+  return apiClient.delete<void>(`/entity-fields/${id}`, FIELD_ERROR_MESSAGE);
 }

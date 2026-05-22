@@ -1,37 +1,25 @@
-import type { EntityRecord, EntityRecordPayload } from "../types";
-import { API_BASE_URL } from "./apiConfig";
+import type { EntityRecord, SaveEntityRecordInput } from "../types";
+import { apiClient } from "./httpClient";
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-
-  if (!response.ok) {
-    throw new Error(
-      "No fue posible completar la solicitud de registros de la entidad.",
-    );
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
-}
-
-export type SaveEntityRecordInput = EntityRecordPayload;
+const RECORD_ERROR_MESSAGE =
+  "No fue posible completar la solicitud de registros de la entidad.";
 
 export function getEntityRecords(entityId: string): Promise<EntityRecord[]> {
-  return request<EntityRecord[]>(`/business-entities/${entityId}/records`);
+  return apiClient.get<EntityRecord[]>(
+    `/business-entities/${entityId}/records`,
+    RECORD_ERROR_MESSAGE,
+  );
 }
 
 export function createEntityRecord(
   entityId: string,
   data: SaveEntityRecordInput,
 ): Promise<EntityRecord> {
-  return request<EntityRecord>(`/business-entities/${entityId}/records`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return apiClient.post<EntityRecord>(
+    `/business-entities/${entityId}/records`,
+    data,
+    RECORD_ERROR_MESSAGE,
+  );
 }
 
 export function updateEntityRecord(
@@ -39,13 +27,10 @@ export function updateEntityRecord(
   recordId: string,
   data: SaveEntityRecordInput,
 ): Promise<EntityRecord> {
-  return request<EntityRecord>(
+  return apiClient.patch<EntityRecord>(
     `/business-entities/${entityId}/records/${recordId}`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    },
+    data,
+    RECORD_ERROR_MESSAGE,
   );
 }
 
@@ -53,7 +38,8 @@ export function deleteEntityRecord(
   entityId: string,
   recordId: string,
 ): Promise<void> {
-  return request<void>(`/business-entities/${entityId}/records/${recordId}`, {
-    method: "DELETE",
-  });
+  return apiClient.delete<void>(
+    `/business-entities/${entityId}/records/${recordId}`,
+    RECORD_ERROR_MESSAGE,
+  );
 }

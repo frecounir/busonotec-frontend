@@ -1,17 +1,8 @@
 import type { AiBusinessSchemaPlan, AiBusinessSchemaResponse } from "../types";
-import { API_BASE_URL } from "./apiConfig";
+import { apiClient } from "./httpClient";
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-
-  if (!response.ok) {
-    throw new Error(
-      "No fue posible completar la solicitud del agente generativo.",
-    );
-  }
-
-  return response.json() as Promise<T>;
-}
+const AI_SCHEMA_ERROR_MESSAGE =
+  "No fue posible completar la solicitud del agente generativo.";
 
 export type CreateSchemaFromPromptInput = {
   prompt: string;
@@ -20,19 +11,19 @@ export type CreateSchemaFromPromptInput = {
 export function createBusinessSchemaPlan(
   data: CreateSchemaFromPromptInput,
 ): Promise<AiBusinessSchemaPlan> {
-  return request<AiBusinessSchemaPlan>("/ai/business-schema/plan", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return apiClient.post<AiBusinessSchemaPlan>(
+    "/ai/business-schema/plan",
+    data,
+    AI_SCHEMA_ERROR_MESSAGE,
+  );
 }
 
 export function executeBusinessSchemaPlan(
   plan: AiBusinessSchemaPlan,
 ): Promise<AiBusinessSchemaResponse> {
-  return request<AiBusinessSchemaResponse>("/ai/business-schema/execute", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(plan),
-  });
+  return apiClient.post<AiBusinessSchemaResponse>(
+    "/ai/business-schema/execute",
+    plan,
+    AI_SCHEMA_ERROR_MESSAGE,
+  );
 }

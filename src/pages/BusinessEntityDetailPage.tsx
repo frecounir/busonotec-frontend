@@ -2,13 +2,12 @@ import { Alert, Card, Col, Flex, Row, Spin, Statistic, Typography } from "antd";
 import type { TourProps } from "antd";
 import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { getEntityById } from "../services/entityService";
-import { createField, deleteField, getFields } from "../services/fieldService";
+import { getBusinessEntityConfiguration } from "../services/businessEntityConfigurationService";
+import { createField, deleteField } from "../services/fieldService";
 import FieldsTable from "../components/FieldsTable";
 import FieldForm from "../components/FieldForm";
 import PageGuide from "../components/PageGuide";
-import type { CreateFieldInput } from "../services/fieldService";
-import type { BusinessEntity, EntityField } from "../types";
+import type { BusinessEntity, CreateFieldInput, EntityField } from "../types";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -59,12 +58,9 @@ export default function BusinessEntityDetailPage() {
     setError(null);
     setIsLoading(true);
     try {
-      const [entityResponse, fieldsResponse] = await Promise.all([
-        getEntityById(id),
-        getFields(id),
-      ]);
-      setEntity(entityResponse);
-      setFields(fieldsResponse);
+      const configuration = await getBusinessEntityConfiguration(id);
+      setEntity(configuration.entity);
+      setFields(configuration.fields);
     } finally {
       setIsLoading(false);
     }
@@ -109,11 +105,11 @@ export default function BusinessEntityDetailPage() {
 
     let isActive = true;
 
-    Promise.all([getEntityById(id), getFields(id)])
-      .then(([entityResponse, fieldsResponse]) => {
+    getBusinessEntityConfiguration(id)
+      .then((configuration) => {
         if (isActive) {
-          setEntity(entityResponse);
-          setFields(fieldsResponse);
+          setEntity(configuration.entity);
+          setFields(configuration.fields);
         }
       })
       .catch(() => {

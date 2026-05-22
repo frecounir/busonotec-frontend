@@ -1,9 +1,4 @@
-import {
-  AppstoreAddOutlined,
-  DatabaseOutlined,
-  HomeOutlined,
-  MenuOutlined,
-} from "@ant-design/icons";
+import { MenuOutlined } from "@ant-design/icons";
 import {
   Button,
   ConfigProvider,
@@ -12,7 +7,6 @@ import {
   Layout,
   Menu,
   Typography,
-  theme,
 } from "antd";
 import esES from "antd/locale/es_ES";
 import type { MenuProps } from "antd";
@@ -24,59 +18,30 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import AppBrand from "./components/AppBrand";
+import { appTheme } from "./config/appTheme";
 import HomePage from "./pages/HomePage";
 import BusinessEntitiesPage from "./pages/BusinessEntitiesPage";
 import BusinessEntityDetailPage from "./pages/BusinessEntityDetailPage";
 import BusinessEntityManagementPage from "./pages/BusinessEntityManagementPage";
 import { getEntities } from "./services/entityService";
 import type { BusinessEntity } from "./types";
+import { subscribeToBusinessEntitiesChanges } from "./utils/businessEntityEvents";
+import {
+  buildMenuItems,
+  GENERATED_MANAGEMENT_MENU_KEY,
+  getSelectedMenuKey,
+} from "./utils/navigationItems";
 
 const { Content, Header, Sider } = Layout;
-const { Text, Title } = Typography;
-
-function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
-  return [
-    {
-      key: "/",
-      icon: <HomeOutlined />,
-      label: "Inicio",
-    },
-    {
-      key: "/entities",
-      icon: <DatabaseOutlined />,
-      label: "Entidades de negocio",
-    },
-    {
-      key: "generated-management",
-      icon: <AppstoreAddOutlined />,
-      label: "Gestión generada",
-      children:
-        entities.length > 0
-          ? entities.map((entity) => ({
-              key: `/management/${entity.id}`,
-              label: entity.name,
-            }))
-          : [
-              {
-                key: "no-generated-entities",
-                label: "Sin entidades creadas",
-                disabled: true,
-              },
-            ],
-    },
-  ];
-}
+const { Text } = Typography;
 
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const selectedKey = location.pathname.startsWith("/management/")
-    ? location.pathname
-    : location.pathname.startsWith("/entities")
-      ? "/entities"
-      : "/";
+  const selectedKey = getSelectedMenuKey(location.pathname);
   const menuItems = buildMenuItems(entities);
 
   useEffect(() => {
@@ -87,11 +52,7 @@ function AppLayout() {
     };
 
     loadEntities();
-    window.addEventListener("business-entities:changed", loadEntities);
-
-    return () => {
-      window.removeEventListener("business-entities:changed", loadEntities);
-    };
+    return subscribeToBusinessEntitiesChanges(loadEntities);
   }, []);
 
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
@@ -103,20 +64,12 @@ function AppLayout() {
 
   const navigationMenu = (
     <>
-      <div className="brand">
-        <div className="brand-mark">LC</div>
-        <div>
-          <Text className="brand-label">Tesis de maestría</Text>
-          <Title level={4} className="brand-title">
-            Plataforma Low Code
-          </Title>
-        </div>
-      </div>
+      <AppBrand />
       <Menu
         mode="inline"
         theme="dark"
         items={menuItems}
-        defaultOpenKeys={["generated-management"]}
+        defaultOpenKeys={[GENERATED_MANAGEMENT_MENU_KEY]}
         selectedKeys={[selectedKey]}
         onClick={handleMenuClick}
       />
@@ -180,34 +133,7 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <ConfigProvider
-      locale={esES}
-      theme={{
-        algorithm: theme.defaultAlgorithm,
-        token: {
-          borderRadius: 8,
-          colorBgLayout: "#eef3f8",
-          colorPrimary: "#2f6f73",
-          fontFamily:
-            'Nunito, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        },
-        components: {
-          Card: {
-            borderRadiusLG: 16,
-            boxShadowTertiary: "0 16px 40px rgba(25, 40, 57, 0.08)",
-          },
-          Layout: {
-            siderBg: "#17363a",
-            triggerBg: "#17363a",
-          },
-          Menu: {
-            darkItemBg: "#17363a",
-            darkItemHoverBg: "#245156",
-            darkItemSelectedBg: "#2f6f73",
-          },
-        },
-      }}
-    >
+    <ConfigProvider locale={esES} theme={appTheme}>
       <BrowserRouter>
         <AppLayout />
       </BrowserRouter>

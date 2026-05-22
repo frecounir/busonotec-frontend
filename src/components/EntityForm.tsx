@@ -1,8 +1,10 @@
 import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
 import { Button, Card, Form, Input } from "antd";
 import { useState } from "react";
-import type { CreateEntityInput } from "../services/entityService";
-import { validateBusinessEntityDefinition } from "../services/validationService";
+import type { CreateEntityInput } from "../types";
+import { validateBusinessEntityDefinition } from "../utils/formValidation";
+import { normalizeEntityValues } from "../utils/formNormalizers";
+import { applyValidationErrorsToForm } from "../utils/validationErrors";
 
 type EntityFormProps = {
   isAiSectionVisible: boolean;
@@ -16,13 +18,6 @@ const validationFieldNames: (keyof CreateEntityInput)[] = [
   "description",
 ];
 
-function normalizeEntityValues(values: CreateEntityInput): CreateEntityInput {
-  return {
-    description: values.description?.trim() || undefined,
-    name: typeof values.name === "string" ? values.name.trim() : "",
-  };
-}
-
 export default function EntityForm({
   isAiSectionVisible,
   isSubmitting,
@@ -35,20 +30,8 @@ export default function EntityForm({
   const syncValidationErrors = (values: CreateEntityInput) => {
     const entityValues = normalizeEntityValues(values);
     const validationErrors = validateBusinessEntityDefinition(entityValues);
-    const errorsByField = validationErrors.reduce<Record<string, string[]>>(
-      (errors, error) => {
-        errors[error.name] = [...(errors[error.name] ?? []), error.message];
-        return errors;
-      },
-      {},
-    );
 
-    form.setFields(
-      validationFieldNames.map((fieldName) => ({
-        errors: errorsByField[fieldName] ?? [],
-        name: fieldName,
-      })),
-    );
+    applyValidationErrorsToForm(form, validationFieldNames, validationErrors);
 
     setIsFormValid(validationErrors.length === 0);
 

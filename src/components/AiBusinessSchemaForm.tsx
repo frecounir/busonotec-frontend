@@ -12,12 +12,12 @@ import {
   Tag,
   Typography,
 } from "antd";
-import type {
-  AiEntityFieldDefinition,
-  AiBusinessSchemaPlan,
-  AiBusinessSchemaResponse,
-  EntityField,
-} from "../types";
+import type { AiBusinessSchemaPlan, AiBusinessSchemaResponse } from "../types";
+import {
+  FIELD_TYPE_LABELS,
+  getValidationLabels,
+  type FieldMetadata,
+} from "../utils/fieldMetadata";
 
 const { Paragraph, Text } = Typography;
 
@@ -35,59 +35,10 @@ type PromptFormValues = {
   prompt: string;
 };
 
-const fieldTypeLabels: Record<EntityField["type"], string> = {
-  string: "Texto",
-  number: "Número",
-  boolean: "Verdadero/Falso",
-  date: "Fecha",
-};
-
-type FieldDefinitionWithValidations = EntityField | AiEntityFieldDefinition;
-
-function hasNumberValidation(
-  value: number | null | undefined,
-): value is number {
-  return typeof value === "number";
-}
-
-function renderValidationTags(field: FieldDefinitionWithValidations) {
-  const tags = [];
-
-  if (field.required) {
-    tags.push(<Tag key="required">Obligatorio</Tag>);
-  }
-
-  if (field.type === "string") {
-    if (hasNumberValidation(field.minLength)) {
-      tags.push(<Tag key="minLength">Mínimo {field.minLength}</Tag>);
-    }
-
-    if (hasNumberValidation(field.maxLength)) {
-      tags.push(<Tag key="maxLength">Máximo {field.maxLength}</Tag>);
-    }
-  }
-
-  if (field.type === "number") {
-    if (hasNumberValidation(field.minValue)) {
-      tags.push(<Tag key="minValue">Desde {field.minValue}</Tag>);
-    }
-
-    if (hasNumberValidation(field.maxValue)) {
-      tags.push(<Tag key="maxValue">Hasta {field.maxValue}</Tag>);
-    }
-  }
-
-  if (field.type === "date") {
-    if (field.minDate) {
-      tags.push(<Tag key="minDate">Desde {field.minDate}</Tag>);
-    }
-
-    if (field.maxDate) {
-      tags.push(<Tag key="maxDate">Hasta {field.maxDate}</Tag>);
-    }
-  }
-
-  return tags;
+function renderValidationTags(field: FieldMetadata) {
+  return getValidationLabels(field).map((label) => (
+    <Tag key={label}>{label}</Tag>
+  ));
 }
 
 export default function AiBusinessSchemaForm({
@@ -179,7 +130,9 @@ export default function AiBusinessSchemaForm({
                       <List.Item>
                         <Space wrap>
                           <Text>{field.name}</Text>
-                          <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                          <Tag color="cyan">
+                            {FIELD_TYPE_LABELS[field.type]}
+                          </Tag>
                           {renderValidationTags(field)}
                         </Space>
                       </List.Item>
@@ -217,7 +170,9 @@ export default function AiBusinessSchemaForm({
                       <List.Item>
                         <Space wrap>
                           <Text>{field.name}</Text>
-                          <Tag color="cyan">{fieldTypeLabels[field.type]}</Tag>
+                          <Tag color="cyan">
+                            {FIELD_TYPE_LABELS[field.type]}
+                          </Tag>
                           {renderValidationTags(field)}
                         </Space>
                       </List.Item>

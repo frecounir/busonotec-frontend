@@ -9,30 +9,19 @@ import {
   Select,
   Switch,
 } from "antd";
-import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
 import { useState } from "react";
-import type { CreateFieldInput } from "../services/fieldService";
-import { validateFieldDefinition } from "../services/validationService";
-import type { EntityFieldType } from "../types";
+import type { CreateFieldInput } from "../types";
+import { FIELD_TYPE_LABELS, FIELD_TYPES } from "../utils/fieldMetadata";
+import { validateFieldDefinition } from "../utils/formValidation";
+import {
+  normalizeFieldValues,
+  type FieldFormValues,
+} from "../utils/formNormalizers";
+import { applyValidationErrorsToForm } from "../utils/validationErrors";
 
 type FieldFormProps = {
   isSubmitting: boolean;
   onCreate: (data: Omit<CreateFieldInput, "businessEntityId">) => Promise<void>;
-};
-
-type FieldFormValues = Omit<CreateFieldInput, "businessEntityId"> & {
-  minDate?: Dayjs | string | null;
-  maxDate?: Dayjs | string | null;
-};
-
-const fieldTypes: EntityFieldType[] = ["string", "number", "boolean", "date"];
-
-const fieldTypeLabels: Record<EntityFieldType, string> = {
-  string: "Texto",
-  number: "Número",
-  boolean: "Verdadero/Falso",
-  date: "Fecha",
 };
 
 const validationFieldNames: (keyof FieldFormValues)[] = [
@@ -47,52 +36,6 @@ const validationFieldNames: (keyof FieldFormValues)[] = [
   "maxDate",
 ];
 
-function normalizeNumber(value: number | null | undefined) {
-  return typeof value === "number" ? value : undefined;
-}
-
-function normalizeDate(value: Dayjs | string | null | undefined) {
-  if (dayjs.isDayjs(value)) {
-    return value.format("YYYY-MM-DD");
-  }
-
-  return typeof value === "string" ? value : undefined;
-}
-
-function normalizeFieldValues(values: FieldFormValues) {
-  const base: Omit<CreateFieldInput, "businessEntityId"> = {
-    name: typeof values.name === "string" ? values.name.trim() : "",
-    required: values.required ?? false,
-    type: values.type ?? "string",
-  };
-
-  if (values.type === "string") {
-    return {
-      ...base,
-      maxLength: normalizeNumber(values.maxLength),
-      minLength: normalizeNumber(values.minLength),
-    };
-  }
-
-  if (values.type === "number") {
-    return {
-      ...base,
-      maxValue: normalizeNumber(values.maxValue),
-      minValue: normalizeNumber(values.minValue),
-    };
-  }
-
-  if (values.type === "date") {
-    return {
-      ...base,
-      maxDate: normalizeDate(values.maxDate),
-      minDate: normalizeDate(values.minDate),
-    };
-  }
-
-  return base;
-}
-
 export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
   const [form] = Form.useForm<FieldFormValues>();
   const [isFormValid, setIsFormValid] = useState(false);
@@ -101,20 +44,8 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
   const syncValidationErrors = (values: FieldFormValues) => {
     const fieldValues = normalizeFieldValues(values);
     const validationErrors = validateFieldDefinition(fieldValues);
-    const errorsByField = validationErrors.reduce<Record<string, string[]>>(
-      (errors, error) => {
-        errors[error.name] = [...(errors[error.name] ?? []), error.message];
-        return errors;
-      },
-      {},
-    );
 
-    form.setFields(
-      validationFieldNames.map((fieldName) => ({
-        errors: errorsByField[fieldName] ?? [],
-        name: fieldName,
-      })),
-    );
+    applyValidationErrorsToForm(form, validationFieldNames, validationErrors);
 
     setIsFormValid(validationErrors.length === 0);
 
@@ -157,8 +88,8 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
 
           <Form.Item label="Tipo" name="type">
             <Select
-              options={fieldTypes.map((fieldType) => ({
-                label: fieldTypeLabels[fieldType],
+              options={FIELD_TYPES.map((fieldType) => ({
+                label: FIELD_TYPE_LABELS[fieldType],
                 value: fieldType,
               }))}
             />
