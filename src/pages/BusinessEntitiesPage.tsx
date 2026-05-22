@@ -40,6 +40,9 @@ export default function BusinessEntitiesPage() {
   const headingRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const aiFormRef = useRef<HTMLDivElement>(null);
+  const aiToggleButtonRef = useRef<
+    HTMLAnchorElement | HTMLButtonElement | null
+  >(null);
   const formRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const steps: TourProps["steps"] = [
@@ -58,8 +61,8 @@ export default function BusinessEntitiesPage() {
     {
       title: "Usa el agente generativo",
       description:
-        "Dentro de la tarjeta de creación manual encontrarás el botón Usar agente generativo. Al presionarlo se abre una sección opcional para describir el proceso en lenguaje natural y crear varias entidades con sus campos automáticamente.",
-      target: () => formRef.current as HTMLElement,
+        "Al presionarlo se abre una sección opcional para describir el proceso en lenguaje natural y crear varias entidades con sus campos automáticamente.",
+      target: () => aiToggleButtonRef.current as HTMLElement,
     },
     {
       title: "Crea una entidad manualmente",
@@ -212,6 +215,7 @@ export default function BusinessEntitiesPage() {
 
       <div ref={formRef}>
         <EntityForm
+          aiToggleButtonRef={aiToggleButtonRef}
           isAiSectionVisible={isAiSectionVisible}
           isSubmitting={isCreating}
           onCreate={handleCreate}

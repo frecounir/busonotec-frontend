@@ -1,12 +1,13 @@
 import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
 import { Button, Card, Form, Input } from "antd";
-import { useState } from "react";
+import { type RefObject, useState } from "react";
 import type { CreateEntityInput } from "../types";
 import { validateBusinessEntityDefinition } from "../utils/formValidation";
 import { normalizeEntityValues } from "../utils/formNormalizers";
 import { applyValidationErrorsToForm } from "../utils/validationErrors";
 
 type EntityFormProps = {
+  aiToggleButtonRef?: RefObject<HTMLAnchorElement | HTMLButtonElement | null>;
   isAiSectionVisible: boolean;
   isSubmitting: boolean;
   onCreate: (data: CreateEntityInput) => Promise<void>;
@@ -19,6 +20,7 @@ const validationFieldNames: (keyof CreateEntityInput)[] = [
 ];
 
 export default function EntityForm({
+  aiToggleButtonRef,
   isAiSectionVisible,
   isSubmitting,
   onCreate,
@@ -63,7 +65,11 @@ export default function EntityForm({
       title="Crear entidad de negocio"
       className="section-card"
       extra={
-        <Button icon={<RobotOutlined />} onClick={onToggleAiSection}>
+        <Button
+          ref={aiToggleButtonRef}
+          icon={<RobotOutlined />}
+          onClick={onToggleAiSection}
+        >
           {isAiSectionVisible
             ? "Ocultar agente generativo"
             : "Usar agente generativo"}
