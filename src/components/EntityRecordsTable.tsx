@@ -1,12 +1,24 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Space, Table, Typography } from "antd";
-import type { TableColumnsType } from "antd";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import {
+  Button,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import type { EntityField, EntityRecord } from "../types";
 import {
   formatRecordValue,
   getRecordFieldValue,
   isEmptyRecordValue,
 } from "../utils/recordValues";
+import ConfirmActionButton from "./ConfirmActionButton";
+import EmptyState from "./EmptyState";
 
 type EntityRecordsTableProps = {
   fields: EntityField[];
@@ -23,53 +35,65 @@ export default function EntityRecordsTable({
   onEdit,
   records,
 }: EntityRecordsTableProps) {
-  const columns: TableColumnsType<EntityRecord> = [
-    ...fields.map((field) => ({
-      title: field.name,
-      key: field.id,
-      render: (_: unknown, record: EntityRecord) => {
-        const value = getRecordFieldValue(record, field.name);
-        return isEmptyRecordValue(value) ? (
-          <Typography.Text type="secondary">Vacío</Typography.Text>
-        ) : (
-          formatRecordValue(value)
-        );
-      },
-    })),
-    {
-      title: "Acciones",
-      key: "actions",
-      fixed: "right",
-      render: (_, record) => (
-        <Space wrap>
-          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Actualizar
-          </Button>
-          <Popconfirm
-            title="Eliminar registro"
-            description="Este registro se eliminará de los datos de la entidad."
-            okButtonProps={{ danger: true, loading: isDeleting }}
-            okText="Eliminar"
-            onConfirm={() => onDelete(record)}
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Eliminar
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  if (records.length === 0) {
+    return (
+      <EmptyState description="Aún no se han insertado registros para esta entidad." />
+    );
+  }
 
   return (
-    <Table<EntityRecord>
-      columns={columns}
-      dataSource={records}
-      locale={{
-        emptyText: "Aún no se han insertado registros para esta entidad.",
-      }}
-      rowKey="id"
-      scroll={{ x: true }}
-    />
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {fields.map((field) => (
+              <TableCell key={field.id}>{field.name}</TableCell>
+            ))}
+            <TableCell align="right">Acciones</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {records.map((record) => (
+            <TableRow key={record.id} hover>
+              {fields.map((field) => {
+                const value = getRecordFieldValue(record, field.name);
+
+                return (
+                  <TableCell key={field.id}>
+                    {isEmptyRecordValue(value) ? (
+                      <Typography color="text.secondary">Vacío</Typography>
+                    ) : (
+                      formatRecordValue(value)
+                    )}
+                  </TableCell>
+                );
+              })}
+              <TableCell align="right">
+                <Stack
+                  direction="row"
+                  sx={{ gap: 1, justifyContent: "flex-end" }}
+                >
+                  <Button
+                    startIcon={<EditOutlined />}
+                    variant="outlined"
+                    onClick={() => onEdit(record)}
+                  >
+                    Actualizar
+                  </Button>
+                  <ConfirmActionButton
+                    description="Este registro se eliminará de los datos de la entidad."
+                    icon={<DeleteOutlined />}
+                    isLoading={isDeleting}
+                    label="Eliminar"
+                    title="Eliminar registro"
+                    onConfirm={() => onDelete(record)}
+                  />
+                </Stack>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

@@ -74,7 +74,7 @@ export function getInitialRecordFieldValue(
   const value = getRecordFieldValue(record, field.name);
 
   if (field.type === "date" && typeof value === "string") {
-    return dayjs(value);
+    return value;
   }
 
   if (

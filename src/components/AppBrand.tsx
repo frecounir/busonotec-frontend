@@ -1,17 +1,15 @@
-import { Typography } from "antd";
-
-const { Text, Title } = Typography;
+import { Box, Typography } from "@mui/material";
 
 export default function AppBrand() {
   return (
-    <div className="brand">
-      <div className="brand-mark">LC</div>
-      <div>
-        <Text className="brand-label">Tesis de maestría</Text>
-        <Title level={4} className="brand-title">
+    <Box className="brand">
+      <Box className="brand-mark">LC</Box>
+      <Box>
+        <Typography className="brand-label">Tesis de maestría</Typography>
+        <Typography variant="h3" className="brand-title">
           Plataforma Low Code
-        </Title>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Box>
   );
 }

@@ -1,19 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
 
-body {
-  margin: 0;
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-}
-
 * {
   box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  min-height: 100vh;
 }
 
 .app-layout {
@@ -27,12 +25,20 @@ body {
     #eef3f8;
 }
 
-.app-sider {
-  position: sticky !important;
-  top: 0;
-  min-height: 100vh;
-  overflow: auto;
-  box-shadow: 10px 0 30px rgba(23, 54, 58, 0.14);
+.app-shell {
+  height: 100vh;
+  min-width: 0;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  transition:
+    margin-left 180ms ease,
+    width 180ms ease;
+}
+
+.app-navigation {
+  height: 100%;
+  overflow-y: auto;
+  width: 100%;
 }
 
 .brand {
@@ -56,33 +62,29 @@ body {
 }
 
 .brand-label {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: rgba(255, 255, 255, 0.65);
   font-size: 0.74rem;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
 .brand-title {
-  margin: 8px 0 0 !important;
-  color: white !important;
+  margin-top: 6px;
+  color: white;
 }
 
 .mobile-header {
-  display: none;
-  height: 64px;
-  padding: 0 16px;
+  display: block;
+  color: #17363a;
   background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(23, 54, 58, 0.08);
   backdrop-filter: blur(14px);
 }
 
-.mobile-navigation .ant-drawer-body {
-  padding: 0;
-  background: #17363a;
-}
-
 .app-content {
   min-width: 0;
   padding: 32px;
+  padding-bottom: 80px;
 }
 
 .content-panel {
@@ -96,6 +98,8 @@ body {
   width: 100%;
   max-width: 1040px;
   gap: 24px;
+  margin: 0 auto;
+  padding-bottom: 48px;
 }
 
 .wide-page {
@@ -118,12 +122,12 @@ body {
     #ffffff;
 }
 
-.hero-card .ant-card-body {
+.hero-card .MuiCardContent-root {
   padding: 34px;
 }
 
 .page-heading {
-  max-width: 760px;
+  max-width: 820px;
 }
 
 .lead {
@@ -140,18 +144,14 @@ body {
   border: 0;
 }
 
-.insight-card .ant-statistic-title {
-  color: #5d6d7a;
-  font-weight: 700;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.insight-card .ant-statistic-content {
-  color: #17363a;
-  font-weight: 800;
-}
-
-.entity-selector {
-  width: min(100%, 420px);
+.stats-grid.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .management-grid {
@@ -162,16 +162,16 @@ body {
 }
 
 .form-grid {
-  display: grid;
+  display: grid !important;
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.5fr) auto;
-  align-items: end;
+  align-items: start;
   gap: 16px;
 }
 
 .field-base-grid {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) 180px 150px auto;
-  align-items: end;
+  align-items: start;
   gap: 16px;
 }
 
@@ -181,75 +181,52 @@ body {
   gap: 16px;
 }
 
-.ai-schema-form {
-  margin-top: 18px;
-}
-
 .ai-schema-result {
   display: grid;
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 8px;
 }
 
-.form-action {
-  min-width: 160px;
+.MuiTableContainer-root {
+  overflow-x: auto;
 }
 
-.ant-card {
-  border-color: rgba(23, 54, 58, 0.08);
+.MuiTableCell-head {
+  color: #5d6d7a;
+  font-weight: 800;
 }
 
-.ant-table-wrapper {
-  overflow: hidden;
-}
-
-@media (max-width: 780px) {
-  .app-sider {
-    display: none;
+@media (min-width: 900px) {
+  .app-shell-menu-open {
+    width: calc(100% - 292px);
+    margin-left: 292px;
   }
+}
 
-  .mobile-header {
-    position: sticky;
-    z-index: 10;
-    top: 0;
-    display: block;
-  }
-
+@media (max-width: 899px) {
   .app-content {
     padding: 18px;
   }
 
-  .hero-card .ant-card-body {
+  .hero-card .MuiCardContent-root {
     padding: 24px;
-  }
-
-  .hero-card h1,
-  .page-heading h2,
-  .page-card h2 {
-    font-size: 1.7rem !important;
   }
 
   .page-stack {
     gap: 18px;
   }
 
+  .stats-grid,
+  .stats-grid.two-columns,
   .form-grid,
   .field-base-grid,
   .field-validation-grid,
   .management-grid {
     grid-template-columns: 1fr;
   }
-
-  .form-action {
-    min-width: 0;
-  }
-
-  .ant-card-body {
-    padding: 18px !important;
-  }
 }
 
-@media (min-width: 781px) and (max-width: 1120px) {
+@media (min-width: 900px) and (max-width: 1120px) {
   .management-grid {
     grid-template-columns: 1fr;
   }

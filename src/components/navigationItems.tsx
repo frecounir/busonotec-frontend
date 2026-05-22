@@ -1,12 +1,21 @@
-import {
-  AppstoreAddOutlined,
-  DatabaseOutlined,
-  HomeOutlined,
-} from "@ant-design/icons";
-import type { MenuProps } from "antd";
+import AccountTreeOutlined from "@mui/icons-material/AccountTreeOutlined";
+import DashboardCustomizeOutlined from "@mui/icons-material/DashboardCustomizeOutlined";
+import HomeOutlined from "@mui/icons-material/HomeOutlined";
+import type { ReactNode } from "react";
 import type { BusinessEntity } from "../types";
 
 export const GENERATED_MANAGEMENT_MENU_KEY = "generated-management";
+
+export type NavigationItem = {
+  disabled?: boolean;
+  icon?: ReactNode;
+  key: string;
+  label: string;
+};
+
+export type NavigationGroup = NavigationItem & {
+  children?: NavigationItem[];
+};
 
 export function getSelectedMenuKey(pathname: string) {
   if (pathname.startsWith("/management/")) {
@@ -20,7 +29,7 @@ export function getSelectedMenuKey(pathname: string) {
   return "/";
 }
 
-export function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
+export function buildMenuItems(entities: BusinessEntity[]): NavigationGroup[] {
   return [
     {
       icon: <HomeOutlined />,
@@ -28,7 +37,7 @@ export function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
       label: "Inicio",
     },
     {
-      icon: <DatabaseOutlined />,
+      icon: <AccountTreeOutlined />,
       key: "/entities",
       label: "Entidades de negocio",
     },
@@ -46,7 +55,7 @@ export function buildMenuItems(entities: BusinessEntity[]): MenuProps["items"] {
                 label: "Sin entidades creadas",
               },
             ],
-      icon: <AppstoreAddOutlined />,
+      icon: <DashboardCustomizeOutlined />,
       key: GENERATED_MANAGEMENT_MENU_KEY,
       label: "Gestión generada",
     },

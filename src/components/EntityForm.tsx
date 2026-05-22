@@ -1,23 +1,35 @@
-import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
-import { Button, Card, Form, Input } from "antd";
-import { type RefObject, useState } from "react";
+import AddOutlined from "@mui/icons-material/AddOutlined";
+import SmartToyOutlined from "@mui/icons-material/SmartToyOutlined";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  Stack,
+  TextField,
+} from "@mui/material";
+import { type FormEvent, type RefObject, useState } from "react";
 import type { CreateEntityInput } from "../types";
 import { validateBusinessEntityDefinition } from "../utils/formValidation";
 import { normalizeEntityValues } from "../utils/formNormalizers";
-import { applyValidationErrorsToForm } from "../utils/validationErrors";
+import {
+  getFieldError,
+  groupValidationErrors,
+} from "../utils/validationErrors";
 
 type EntityFormProps = {
-  aiToggleButtonRef?: RefObject<HTMLAnchorElement | HTMLButtonElement | null>;
+  aiToggleButtonRef?: RefObject<HTMLButtonElement | null>;
   isAiSectionVisible: boolean;
   isSubmitting: boolean;
   onCreate: (data: CreateEntityInput) => Promise<void>;
   onToggleAiSection: () => void;
 };
 
-const validationFieldNames: (keyof CreateEntityInput)[] = [
-  "name",
-  "description",
-];
+const initialValues: CreateEntityInput = {
+  description: "",
+  name: "",
+};
 
 export default function EntityForm({
   aiToggleButtonRef,
@@ -26,28 +38,30 @@ export default function EntityForm({
   onCreate,
   onToggleAiSection,
 }: EntityFormProps) {
-  const [form] = Form.useForm<CreateEntityInput>();
+  const [values, setValues] = useState<CreateEntityInput>(initialValues);
+  const [errorsByField, setErrorsByField] = useState<Record<string, string[]>>(
+    {},
+  );
   const [isFormValid, setIsFormValid] = useState(false);
 
-  const syncValidationErrors = (values: CreateEntityInput) => {
-    const entityValues = normalizeEntityValues(values);
+  const syncValidationErrors = (nextValues: CreateEntityInput) => {
+    const entityValues = normalizeEntityValues(nextValues);
     const validationErrors = validateBusinessEntityDefinition(entityValues);
 
-    applyValidationErrorsToForm(form, validationFieldNames, validationErrors);
-
+    setErrorsByField(groupValidationErrors(validationErrors));
     setIsFormValid(validationErrors.length === 0);
 
     return validationErrors;
   };
 
-  const handleValuesChange = (
-    _changedValues: Partial<CreateEntityInput>,
-    values: CreateEntityInput,
-  ) => {
-    syncValidationErrors(values);
+  const updateField = (fieldName: keyof CreateEntityInput, value: string) => {
+    const nextValues = { ...values, [fieldName]: value };
+    setValues(nextValues);
+    syncValidationErrors(nextValues);
   };
 
-  const submit = async (values: CreateEntityInput) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const entityValues = normalizeEntityValues(values);
     const validationErrors = syncValidationErrors(values);
 
@@ -56,55 +70,65 @@ export default function EntityForm({
     }
 
     await onCreate(entityValues);
-    form.resetFields();
+    setValues(initialValues);
+    setErrorsByField({});
     setIsFormValid(false);
   };
 
   return (
-    <Card
-      title="Crear entidad de negocio"
-      className="section-card"
-      extra={
-        <Button
-          ref={aiToggleButtonRef}
-          icon={<RobotOutlined />}
-          onClick={onToggleAiSection}
+    <Card className="section-card">
+      <CardHeader
+        title="Crear entidad de negocio"
+        action={
+          <Button
+            ref={aiToggleButtonRef}
+            startIcon={<SmartToyOutlined />}
+            variant="outlined"
+            onClick={onToggleAiSection}
+          >
+            {isAiSectionVisible
+              ? "Ocultar agente generativo"
+              : "Usar agente generativo"}
+          </Button>
+        }
+      />
+      <CardContent>
+        <Stack
+          component="form"
+          className="form-grid"
+          noValidate
+          onSubmit={submit}
         >
-          {isAiSectionVisible
-            ? "Ocultar agente generativo"
-            : "Usar agente generativo"}
-        </Button>
-      }
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={submit}
-        onValuesChange={handleValuesChange}
-      >
-        <div className="form-grid">
-          <Form.Item label="Nombre" name="name">
-            <Input placeholder="Cliente" />
-          </Form.Item>
+          <TextField
+            error={Boolean(getFieldError(errorsByField, "name"))}
+            helperText={getFieldError(errorsByField, "name")}
+            label="Nombre"
+            placeholder="Cliente"
+            value={values.name}
+            onChange={(event) => updateField("name", event.target.value)}
+          />
 
-          <Form.Item label="Descripción" name="description">
-            <Input placeholder="Representa un cliente del negocio" />
-          </Form.Item>
+          <TextField
+            error={Boolean(getFieldError(errorsByField, "description"))}
+            helperText={getFieldError(errorsByField, "description")}
+            label="Descripción"
+            placeholder="Representa un cliente del negocio"
+            value={values.description ?? ""}
+            onChange={(event) => updateField("description", event.target.value)}
+          />
 
-          <Form.Item className="form-action">
-            <Button
-              block
-              disabled={!isFormValid || isSubmitting}
-              htmlType="submit"
-              icon={<PlusOutlined />}
-              loading={isSubmitting}
-              type="primary"
-            >
-              Crear entidad
-            </Button>
-          </Form.Item>
-        </div>
-      </Form>
+          <Button
+            disabled={!isFormValid || isSubmitting}
+            startIcon={
+              isSubmitting ? <CircularProgress size={16} /> : <AddOutlined />
+            }
+            type="submit"
+            variant="contained"
+          >
+            Crear entidad
+          </Button>
+        </Stack>
+      </CardContent>
     </Card>
   );
 }

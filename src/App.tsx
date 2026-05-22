@@ -1,15 +1,15 @@
-import { MenuOutlined } from "@ant-design/icons";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
+import MenuOutlined from "@mui/icons-material/MenuOutlined";
 import {
-  Button,
-  ConfigProvider,
+  AppBar,
+  Box,
+  CssBaseline,
   Drawer,
-  Flex,
-  Layout,
-  Menu,
+  IconButton,
+  ThemeProvider,
+  Toolbar,
   Typography,
-} from "antd";
-import esES from "antd/locale/es_ES";
-import type { MenuProps } from "antd";
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import {
   BrowserRouter,
@@ -18,7 +18,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import AppBrand from "./components/AppBrand";
+import AppNavigation from "./components/AppNavigation";
 import { appTheme } from "./config/appTheme";
 import HomePage from "./pages/HomePage";
 import BusinessEntitiesPage from "./pages/BusinessEntitiesPage";
@@ -27,22 +27,14 @@ import BusinessEntityManagementPage from "./pages/BusinessEntityManagementPage";
 import { getEntities } from "./services/entityService";
 import type { BusinessEntity } from "./types";
 import { subscribeToBusinessEntitiesChanges } from "./utils/businessEntityEvents";
-import {
-  buildMenuItems,
-  GENERATED_MANAGEMENT_MENU_KEY,
-  getSelectedMenuKey,
-} from "./utils/navigationItems";
 
-const { Content, Header, Sider } = Layout;
-const { Text } = Typography;
+const drawerWidth = 292;
 
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const selectedKey = getSelectedMenuKey(location.pathname);
-  const menuItems = buildMenuItems(entities);
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
 
   useEffect(() => {
     const loadEntities = () => {
@@ -55,55 +47,67 @@ function AppLayout() {
     return subscribeToBusinessEntitiesChanges(loadEntities);
   }, []);
 
-  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
-    if (key.startsWith("/")) {
-      navigate(key);
-      setIsMenuOpen(false);
-    }
+  const handleNavigate = (path: string) => {
+    navigate(path);
   };
 
-  const navigationMenu = (
-    <>
-      <AppBrand />
-      <Menu
-        mode="inline"
-        theme="dark"
-        items={menuItems}
-        defaultOpenKeys={[GENERATED_MANAGEMENT_MENU_KEY]}
-        selectedKeys={[selectedKey]}
-        onClick={handleMenuClick}
-      />
-    </>
-  );
-
   return (
-    <Layout className="app-layout">
-      <Sider width={292} className="app-sider">
-        {navigationMenu}
-      </Sider>
+    <Box className="app-layout">
       <Drawer
-        className="mobile-navigation"
-        onClose={() => setIsMenuOpen(false)}
         open={isMenuOpen}
-        placement="left"
-        size={300}
-        title={null}
+        variant="persistent"
+        sx={(theme) => ({
+          width: drawerWidth,
+          zIndex: theme.zIndex.drawer + 2,
+          "& .MuiDrawer-paper": {
+            bgcolor: "primary.dark",
+            borderRight: 0,
+            boxShadow: "10px 0 30px rgba(23, 54, 58, 0.14)",
+            height: "100%",
+            top: 0,
+            width: drawerWidth,
+            zIndex: theme.zIndex.drawer + 2,
+          },
+        })}
       >
-        {navigationMenu}
+        <AppNavigation
+          entities={entities}
+          onClose={() => setIsMenuOpen(false)}
+          pathname={location.pathname}
+          onNavigate={handleNavigate}
+        />
       </Drawer>
-      <Layout>
-        <Header className="mobile-header">
-          <Flex align="center" justify="space-between">
-            <Button
-              aria-label="Abrir menú de navegación"
-              icon={<MenuOutlined />}
-              onClick={() => setIsMenuOpen(true)}
-            />
-            <Text strong>Plataforma Low Code</Text>
-          </Flex>
-        </Header>
-        <Content className="app-content">
-          <div className="content-panel">
+
+      <Box
+        className={isMenuOpen ? "app-shell app-shell-menu-open" : "app-shell"}
+      >
+        <AppBar
+          className="mobile-header"
+          elevation={0}
+          position="sticky"
+          sx={(theme) => ({ zIndex: theme.zIndex.drawer + 1 })}
+        >
+          <Toolbar>
+            <IconButton
+              aria-label={
+                isMenuOpen
+                  ? "Ocultar menú de navegación"
+                  : "Abrir menú de navegación"
+              }
+              color="inherit"
+              edge="start"
+              onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
+            >
+              {isMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+            </IconButton>
+            <Typography sx={{ fontWeight: 800 }}>
+              Plataforma Low Code
+            </Typography>
+          </Toolbar>
+        </AppBar>
+
+        <Box component="main" className="app-content">
+          <Box className="content-panel">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/entities" element={<BusinessEntitiesPage />} />
@@ -124,19 +128,20 @@ function AppLayout() {
                 }
               />
             </Routes>
-          </div>
-        </Content>
-      </Layout>
-    </Layout>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
 export default function App() {
   return (
-    <ConfigProvider locale={esES} theme={appTheme}>
+    <ThemeProvider theme={appTheme}>
+      <CssBaseline />
       <BrowserRouter>
         <AppLayout />
       </BrowserRouter>
-    </ConfigProvider>
+    </ThemeProvider>
   );
 }

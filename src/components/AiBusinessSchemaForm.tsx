@@ -1,25 +1,30 @@
-import { RobotOutlined } from "@ant-design/icons";
+import SmartToyOutlined from "@mui/icons-material/SmartToyOutlined";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
+  Box,
   Button,
   Card,
-  Collapse,
-  Divider,
-  Form,
-  Input,
+  CardContent,
+  CardHeader,
+  Chip,
+  CircularProgress,
   List,
-  Space,
-  Tag,
+  ListItem,
+  Stack,
+  TextField,
   Typography,
-} from "antd";
+} from "@mui/material";
+import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { AiBusinessSchemaPlan, AiBusinessSchemaResponse } from "../types";
 import {
   FIELD_TYPE_LABELS,
   getValidationLabels,
   type FieldMetadata,
 } from "../utils/fieldMetadata";
-
-const { Paragraph, Text } = Typography;
 
 type AiBusinessSchemaFormProps = {
   executedSchema: AiBusinessSchemaResponse | null;
@@ -31,13 +36,9 @@ type AiBusinessSchemaFormProps = {
   onRejectPlan: () => void;
 };
 
-type PromptFormValues = {
-  prompt: string;
-};
-
 function renderValidationTags(field: FieldMetadata) {
   return getValidationLabels(field).map((label) => (
-    <Tag key={label}>{label}</Tag>
+    <Chip key={label} label={label} size="small" />
   ));
 }
 
@@ -50,140 +51,190 @@ export default function AiBusinessSchemaForm({
   onGeneratePlan,
   onRejectPlan,
 }: AiBusinessSchemaFormProps) {
-  const [form] = Form.useForm<PromptFormValues>();
+  const [prompt, setPrompt] = useState("");
+  const generatedPlanRef = useRef<HTMLDivElement>(null);
+  const executedSchemaRef = useRef<HTMLDivElement>(null);
 
-  const submit = async (values: PromptFormValues) => {
-    await onGeneratePlan(values.prompt.trim());
-    form.resetFields();
+  useEffect(() => {
+    const target = generatedPlan
+      ? generatedPlanRef.current
+      : executedSchema
+        ? executedSchemaRef.current
+        : null;
+
+    if (!target) {
+      return;
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, [executedSchema, generatedPlan]);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await onGeneratePlan(prompt.trim());
+    setPrompt("");
   };
 
   return (
-    <Card
-      className="section-card"
-      title="Crear entidades con agente generativo"
-    >
-      <Paragraph>
-        Describe en palabras simples qué información necesita gestionar tu
-        negocio. El agente generativo propondrá entidades y campos, y el backend
-        las creará automáticamente.
-      </Paragraph>
-      <Alert
-        showIcon
-        type="info"
-        title="Ejemplo"
-        description="Crea entidades para estudiantes y actividades. Los estudiantes necesitan nombre obligatorio, correo y activo. Las actividades necesitan título de máximo 120 caracteres, fecha de inicio desde 2026-01-01 y duración entre 1 y 8."
-      />
+    <Card className="section-card">
+      <CardHeader title="Crear entidades con agente generativo" />
+      <CardContent>
+        <Stack sx={{ gap: 2.5 }}>
+          <Typography color="text.secondary">
+            Describe en palabras simples qué información necesita gestionar tu
+            negocio. El agente generativo propondrá entidades y campos, y el
+            backend las creará automáticamente.
+          </Typography>
 
-      <Form
-        className="ai-schema-form"
-        form={form}
-        layout="vertical"
-        onFinish={submit}
-      >
-        <Form.Item
-          label="Descripción del modelo de negocio"
-          name="prompt"
-          rules={[
-            {
-              required: true,
-              message: "Describe las entidades y datos que necesitas crear.",
-            },
-          ]}
-        >
-          <Input.TextArea
-            autoSize={{ minRows: 4, maxRows: 8 }}
-            placeholder="Ejemplo: Crea entidades para clientes y pedidos. Los clientes necesitan nombre, correo y activo. Los pedidos necesitan fecha, total y estado."
-          />
-        </Form.Item>
+          <Alert severity="info">
+            Ejemplo: crea entidades para estudiantes y actividades. Los
+            estudiantes necesitan nombre obligatorio, correo y activo. Las
+            actividades necesitan título de máximo 120 caracteres, fecha de
+            inicio desde 2026-01-01 y duración entre 1 y 8.
+          </Alert>
 
-        <Button
-          htmlType="submit"
-          icon={<RobotOutlined />}
-          loading={isGeneratingPlan}
-          type="primary"
-        >
-          Generar plan
-        </Button>
-      </Form>
+          <Stack component="form" noValidate sx={{ gap: 2 }} onSubmit={submit}>
+            <TextField
+              multiline
+              label="Descripción del modelo de negocio"
+              minRows={4}
+              placeholder="Ejemplo: Crea entidades para clientes y pedidos. Los clientes necesitan nombre, correo y activo. Los pedidos necesitan fecha, total y estado."
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+            />
 
-      {generatedPlan && (
-        <div className="ai-schema-result">
-          <Text strong>Plan propuesto por el agente</Text>
-          <Paragraph>
-            Revisa esta propuesta antes de crear entidades reales. Si algo no
-            corresponde con tu negocio, puedes rechazarla y escribir una
-            descripción más precisa.
-          </Paragraph>
-          <Collapse
-            items={generatedPlan.businessEntities.map((entityDefinition) => ({
-              key: entityDefinition.name,
-              label: entityDefinition.name,
-              children: (
-                <>
-                  <Paragraph>{entityDefinition.description}</Paragraph>
-                  <List
-                    dataSource={entityDefinition.fields ?? []}
-                    locale={{
-                      emptyText: "La entidad fue propuesta sin campos.",
-                    }}
-                    renderItem={(field) => (
-                      <List.Item>
-                        <Space wrap>
-                          <Text>{field.name}</Text>
-                          <Tag color="cyan">
-                            {FIELD_TYPE_LABELS[field.type]}
-                          </Tag>
-                          {renderValidationTags(field)}
-                        </Space>
-                      </List.Item>
-                    )}
-                  />
-                </>
-              ),
-            }))}
-          />
-          <Space wrap>
-            <Button loading={isExecuting} onClick={onAcceptPlan} type="primary">
-              Aceptar y crear entidades
-            </Button>
-            <Button disabled={isExecuting} onClick={onRejectPlan}>
-              Rechazar plan
-            </Button>
-          </Space>
-        </div>
-      )}
+            <Box>
+              <Button
+                disabled={!prompt.trim() || isGeneratingPlan}
+                startIcon={
+                  isGeneratingPlan ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    <SmartToyOutlined />
+                  )
+                }
+                type="submit"
+                variant="contained"
+              >
+                Generar plan
+              </Button>
+            </Box>
+          </Stack>
 
-      {executedSchema && (
-        <div className="ai-schema-result">
-          <Divider />
-          <Text strong>Resultado creado por el agente</Text>
-          <Collapse
-            items={executedSchema.createdBusinessEntities.map(
-              (createdEntity) => ({
-                key: createdEntity.businessEntity.id,
-                label: createdEntity.businessEntity.name,
-                children: (
-                  <List
-                    dataSource={createdEntity.fields}
-                    locale={{ emptyText: "La entidad fue creada sin campos." }}
-                    renderItem={(field) => (
-                      <List.Item>
-                        <Space wrap>
-                          <Text>{field.name}</Text>
-                          <Tag color="cyan">
-                            {FIELD_TYPE_LABELS[field.type]}
-                          </Tag>
-                          {renderValidationTags(field)}
-                        </Space>
-                      </List.Item>
-                    )}
-                  />
-                ),
-              }),
-            )}
-          />
-        </div>
-      )}
+          {generatedPlan && (
+            <Box ref={generatedPlanRef} className="ai-schema-result">
+              <Typography sx={{ fontWeight: 800 }}>
+                Plan propuesto por el agente
+              </Typography>
+              <Typography color="text.secondary">
+                Revisa esta propuesta antes de crear entidades reales. Si algo
+                no corresponde con tu negocio, puedes rechazarla y escribir una
+                descripción más precisa.
+              </Typography>
+
+              {generatedPlan.businessEntities.map((entityDefinition) => (
+                <Accordion key={entityDefinition.name}>
+                  <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                    <Typography sx={{ fontWeight: 800 }}>
+                      {entityDefinition.name}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography color="text.secondary" sx={{ mb: 1 }}>
+                      {entityDefinition.description}
+                    </Typography>
+                    <List disablePadding>
+                      {(entityDefinition.fields ?? []).map((field) => (
+                        <ListItem key={field.name} disableGutters>
+                          <Stack
+                            direction="row"
+                            sx={{ flexWrap: "wrap", gap: 1 }}
+                          >
+                            <Typography sx={{ fontWeight: 800 }}>
+                              {field.name}
+                            </Typography>
+                            <Chip
+                              color="primary"
+                              label={FIELD_TYPE_LABELS[field.type]}
+                              size="small"
+                              variant="outlined"
+                            />
+                            {renderValidationTags(field)}
+                          </Stack>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+
+              <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+                <Button
+                  disabled={isExecuting}
+                  startIcon={
+                    isExecuting ? <CircularProgress size={16} /> : null
+                  }
+                  variant="contained"
+                  onClick={onAcceptPlan}
+                >
+                  Aceptar y crear entidades
+                </Button>
+                <Button
+                  disabled={isExecuting}
+                  variant="outlined"
+                  onClick={onRejectPlan}
+                >
+                  Rechazar plan
+                </Button>
+              </Stack>
+            </Box>
+          )}
+
+          {executedSchema && (
+            <Box ref={executedSchemaRef} className="ai-schema-result">
+              <Typography sx={{ fontWeight: 800 }}>
+                Resultado creado por el agente
+              </Typography>
+              {executedSchema.createdBusinessEntities.map((createdEntity) => (
+                <Accordion key={createdEntity.businessEntity.id}>
+                  <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                    <Typography sx={{ fontWeight: 800 }}>
+                      {createdEntity.businessEntity.name}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <List disablePadding>
+                      {createdEntity.fields.map((field) => (
+                        <ListItem key={field.id} disableGutters>
+                          <Stack
+                            direction="row"
+                            sx={{ flexWrap: "wrap", gap: 1 }}
+                          >
+                            <Typography sx={{ fontWeight: 800 }}>
+                              {field.name}
+                            </Typography>
+                            <Chip
+                              color="primary"
+                              label={FIELD_TYPE_LABELS[field.type]}
+                              size="small"
+                              variant="outlined"
+                            />
+                            {renderValidationTags(field)}
+                          </Stack>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
+          )}
+        </Stack>
+      </CardContent>
     </Card>
   );
 }

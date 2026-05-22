@@ -1,15 +1,15 @@
 import {
   Button,
   Card,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Space,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
   Switch,
-} from "antd";
-import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+  TextField,
+} from "@mui/material";
+import { type FormEvent, useEffect, useState } from "react";
 import type { EntityField, EntityRecord, EntityRecordPayload } from "../types";
 import { validateRecordValues } from "../utils/formValidation";
 import {
@@ -17,7 +17,10 @@ import {
   normalizeRecordValues,
   type RecordFormValues,
 } from "../utils/recordValues";
-import { applyValidationErrorsToForm } from "../utils/validationErrors";
+import {
+  getFieldError,
+  groupValidationErrors,
+} from "../utils/validationErrors";
 
 type EntityRecordFormProps = {
   editingRecord: EntityRecord | null;
@@ -27,37 +30,22 @@ type EntityRecordFormProps = {
   onSubmit: (values: EntityRecordPayload) => Promise<void>;
 };
 
-function renderFieldInput(field: EntityField) {
-  if (field.type === "number") {
-    return (
-      <InputNumber
-        max={field.maxValue ?? undefined}
-        min={field.minValue ?? undefined}
-        style={{ width: "100%" }}
-      />
-    );
-  }
+function buildInitialValues(
+  fields: EntityField[],
+  record: EntityRecord | null,
+) {
+  return fields.reduce<RecordFormValues>((values, field) => {
+    values[field.name] = getInitialRecordFieldValue(field, record);
+    return values;
+  }, {});
+}
 
-  if (field.type === "boolean") {
-    return <Switch checkedChildren="Sí" unCheckedChildren="No" />;
-  }
+function getTextFieldValue(value: RecordFormValues[string]) {
+  return typeof value === "string" || typeof value === "number" ? value : "";
+}
 
-  if (field.type === "date") {
-    return (
-      <DatePicker
-        disabledDate={(currentDate) =>
-          Boolean(
-            (field.minDate &&
-              currentDate.isBefore(dayjs(field.minDate), "day")) ||
-            (field.maxDate && currentDate.isAfter(dayjs(field.maxDate), "day")),
-          )
-        }
-        style={{ width: "100%" }}
-      />
-    );
-  }
-
-  return <Input maxLength={field.maxLength ?? undefined} />;
+function parseNumberValue(value: string) {
+  return value === "" ? undefined : Number(value);
 }
 
 export default function EntityRecordForm({
@@ -67,97 +55,170 @@ export default function EntityRecordForm({
   onCancelEdit,
   onSubmit,
 }: EntityRecordFormProps) {
-  const [form] = Form.useForm<RecordFormValues>();
+  const [values, setValues] = useState<RecordFormValues>({});
+  const [errorsByField, setErrorsByField] = useState<Record<string, string[]>>(
+    {},
+  );
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
-    const initialValues = fields.reduce<RecordFormValues>((values, field) => {
-      values[field.name] = getInitialRecordFieldValue(field, editingRecord);
-      return values;
-    }, {});
-    const initialIsFormValid =
-      validateRecordValues(fields, normalizeRecordValues(fields, initialValues))
-        .length === 0;
-
-    form.setFieldsValue(initialValues);
-    form.setFields(fields.map((field) => ({ errors: [], name: field.name })));
-
+    const initialValues = buildInitialValues(fields, editingRecord);
+    const validationErrors = validateRecordValues(
+      fields,
+      normalizeRecordValues(fields, initialValues),
+    );
     const timeoutId = window.setTimeout(() => {
-      setIsFormValid(initialIsFormValid);
+      setValues(initialValues);
+      setErrorsByField({});
+      setIsFormValid(validationErrors.length === 0);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [editingRecord, fields, form]);
+  }, [editingRecord, fields]);
 
-  const submit = async (values: RecordFormValues) => {
+  const syncValidationErrors = (nextValues: RecordFormValues) => {
+    const recordValues = normalizeRecordValues(fields, nextValues);
+    const validationErrors = validateRecordValues(fields, recordValues);
+
+    setErrorsByField(groupValidationErrors(validationErrors));
+    setIsFormValid(validationErrors.length === 0);
+
+    return validationErrors;
+  };
+
+  const updateField = (fieldName: string, value: RecordFormValues[string]) => {
+    const nextValues = { ...values, [fieldName]: value };
+    setValues(nextValues);
+    syncValidationErrors(nextValues);
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const validationErrors = syncValidationErrors(values);
 
     if (validationErrors.length > 0) {
       return;
     }
 
-    const recordValues = normalizeRecordValues(fields, values);
-    await onSubmit(recordValues);
-    form.resetFields();
+    await onSubmit(normalizeRecordValues(fields, values));
+    const initialValues = buildInitialValues(fields, null);
+    setValues(initialValues);
+    setErrorsByField({});
     setIsFormValid(false);
   };
 
-  const syncValidationErrors = (values: RecordFormValues) => {
-    const recordValues = normalizeRecordValues(fields, values);
-    const validationErrors = validateRecordValues(fields, recordValues);
-
-    applyValidationErrorsToForm(
-      form,
-      fields.map((field) => field.name),
-      validationErrors,
-    );
-
-    setIsFormValid(validationErrors.length === 0);
-
-    return validationErrors;
-  };
-
-  const handleValuesChange = (
-    _changedValues: RecordFormValues,
-    values: RecordFormValues,
-  ) => {
-    syncValidationErrors(values);
-  };
-
   return (
-    <Card
-      className="section-card"
-      title={editingRecord ? "Actualizar registro" : "Crear registro"}
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={submit}
-        onValuesChange={handleValuesChange}
-      >
-        {fields.map((field) => (
-          <Form.Item
-            key={field.id}
-            label={field.name}
-            name={field.name}
-            valuePropName={field.type === "boolean" ? "checked" : "value"}
-          >
-            {renderFieldInput(field)}
-          </Form.Item>
-        ))}
+    <Card className="section-card">
+      <CardHeader
+        title={editingRecord ? "Actualizar registro" : "Crear registro"}
+      />
+      <CardContent>
+        <Stack component="form" noValidate sx={{ gap: 2 }} onSubmit={submit}>
+          {fields.map((field) => {
+            const fieldError = getFieldError(errorsByField, field.name);
+            const value = values[field.name];
 
-        <Space wrap>
-          <Button
-            disabled={!isFormValid || isSubmitting}
-            htmlType="submit"
-            loading={isSubmitting}
-            type="primary"
-          >
-            {editingRecord ? "Actualizar" : "Crear"}
-          </Button>
-          {editingRecord && <Button onClick={onCancelEdit}>Cancelar</Button>}
-        </Space>
-      </Form>
+            if (field.type === "boolean") {
+              return (
+                <FormControlLabel
+                  key={field.id}
+                  control={
+                    <Switch
+                      checked={Boolean(value)}
+                      onChange={(event) =>
+                        updateField(field.name, event.target.checked)
+                      }
+                    />
+                  }
+                  label={field.name}
+                />
+              );
+            }
+
+            if (field.type === "number") {
+              return (
+                <TextField
+                  key={field.id}
+                  error={Boolean(fieldError)}
+                  helperText={fieldError}
+                  label={field.name}
+                  type="number"
+                  value={getTextFieldValue(value)}
+                  slotProps={{
+                    htmlInput: {
+                      max: field.maxValue ?? undefined,
+                      min: field.minValue ?? undefined,
+                    },
+                  }}
+                  onChange={(event) =>
+                    updateField(
+                      field.name,
+                      parseNumberValue(event.target.value),
+                    )
+                  }
+                />
+              );
+            }
+
+            if (field.type === "date") {
+              return (
+                <TextField
+                  key={field.id}
+                  error={Boolean(fieldError)}
+                  helperText={fieldError}
+                  label={field.name}
+                  type="date"
+                  value={getTextFieldValue(value)}
+                  slotProps={{
+                    htmlInput: {
+                      max: field.maxDate ?? undefined,
+                      min: field.minDate ?? undefined,
+                    },
+                    inputLabel: { shrink: true },
+                  }}
+                  onChange={(event) =>
+                    updateField(field.name, event.target.value)
+                  }
+                />
+              );
+            }
+
+            return (
+              <TextField
+                key={field.id}
+                error={Boolean(fieldError)}
+                helperText={fieldError}
+                label={field.name}
+                value={getTextFieldValue(value)}
+                slotProps={{
+                  htmlInput: {
+                    maxLength: field.maxLength ?? undefined,
+                  },
+                }}
+                onChange={(event) =>
+                  updateField(field.name, event.target.value)
+                }
+              />
+            );
+          })}
+
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+            <Button
+              disabled={!isFormValid || isSubmitting}
+              startIcon={isSubmitting ? <CircularProgress size={16} /> : null}
+              type="submit"
+              variant="contained"
+            >
+              {editingRecord ? "Actualizar" : "Crear"}
+            </Button>
+            {editingRecord && (
+              <Button variant="outlined" onClick={onCancelEdit}>
+                Cancelar
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </CardContent>
     </Card>
   );
 }

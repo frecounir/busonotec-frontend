@@ -1,19 +1,28 @@
-import { Alert, Card, Col, Flex, Row, Spin, Statistic, Typography } from "antd";
-import type { TourProps } from "antd";
-import { useEffect, useRef, useState } from "react";
 import {
-  getEntities,
-  createEntity,
-  deleteEntity,
-} from "../services/entityService";
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import {
   createBusinessSchemaPlan,
   executeBusinessSchemaPlan,
 } from "../services/aiBusinessSchemaService";
+import {
+  createEntity,
+  deleteEntity,
+  getEntities,
+} from "../services/entityService";
 import AiBusinessSchemaForm from "../components/AiBusinessSchemaForm";
 import EntitiesTable from "../components/EntitiesTable";
 import EntityForm from "../components/EntityForm";
-import PageGuide from "../components/PageGuide";
+import LoadingPanel from "../components/LoadingPanel";
+import MetricCard from "../components/MetricCard";
+import PageGuide, { type GuideStep } from "../components/PageGuide";
 import type {
   AiBusinessSchemaPlan,
   AiBusinessSchemaResponse,
@@ -21,8 +30,6 @@ import type {
   CreateEntityInput,
 } from "../types";
 import { notifyBusinessEntitiesChanged } from "../utils/businessEntityEvents";
-
-const { Text, Title } = Typography;
 
 export default function BusinessEntitiesPage() {
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
@@ -40,41 +47,39 @@ export default function BusinessEntitiesPage() {
   const headingRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const aiFormRef = useRef<HTMLDivElement>(null);
-  const aiToggleButtonRef = useRef<
-    HTMLAnchorElement | HTMLButtonElement | null
-  >(null);
+  const aiToggleButtonRef = useRef<HTMLButtonElement | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const steps: TourProps["steps"] = [
+  const steps: GuideStep[] = [
     {
       title: "Define entidades de negocio",
       description:
         "Una entidad de negocio es algo importante para la organización y sobre lo cual se necesita guardar información. Puede ser Estudiantes, Clientes, Cursos, Productos, Solicitudes o cualquier concepto propio del proceso que se quiere gestionar.",
-      target: () => headingRef.current as HTMLElement,
+      target: () => headingRef.current,
     },
     {
       title: "Observa el avance de configuración",
       description:
         "Estos números ayudan a entender cuánto se ha configurado hasta el momento. Cada entidad creada se convierte en una opción del menú lateral, lo que significa que el sistema empieza a construir secciones de trabajo a partir de lo definido por el usuario.",
-      target: () => statsRef.current as HTMLElement,
+      target: () => statsRef.current,
     },
     {
       title: "Usa el agente generativo",
       description:
         "Al presionarlo se abre una sección opcional para describir el proceso en lenguaje natural y crear varias entidades con sus campos automáticamente.",
-      target: () => aiToggleButtonRef.current as HTMLElement,
+      target: () => aiToggleButtonRef.current,
     },
     {
       title: "Crea una entidad manualmente",
       description:
         "Para crear una entidad, escribe un nombre claro y una descripción breve. Por ejemplo: nombre Estudiantes y descripción Personas inscritas en actividades académicas. No hace falta saber de programación; basta con describir el concepto del negocio.",
-      target: () => formRef.current as HTMLElement,
+      target: () => formRef.current,
     },
     {
       title: "Administra la entidad",
       description:
         "La tabla muestra las entidades ya creadas. El botón Gestionar permite definir qué datos tendrá esa entidad. El botón Eliminar debe usarse con cuidado, porque elimina la entidad, sus campos y la información técnica asociada.",
-      target: () => tableRef.current as HTMLElement,
+      target: () => tableRef.current,
     },
   ];
 
@@ -183,37 +188,31 @@ export default function BusinessEntitiesPage() {
 
   return (
     <section className="page-stack">
-      <div ref={headingRef} className="page-heading">
-        <Flex align="flex-start" gap={16} justify="space-between" wrap>
-          <div>
-            <Text type="secondary" strong>
+      <Box ref={headingRef} className="page-heading">
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "flex-start",
+            gap: 2,
+            justifyContent: "space-between",
+          }}
+        >
+          <Box>
+            <Typography color="text.secondary" sx={{ fontWeight: 800 }}>
               Configuración
-            </Text>
-            <Title level={2}>Entidades de negocio</Title>
-          </div>
+            </Typography>
+            <Typography variant="h2">Entidades de negocio</Typography>
+          </Box>
           <PageGuide steps={steps} />
-        </Flex>
-      </div>
+        </Stack>
+      </Box>
 
-      <div ref={statsRef}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12}>
-            <Card className="insight-card">
-              <Statistic
-                title="Entidades configuradas"
-                value={entities.length}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Card className="insight-card">
-              <Statistic title="Opciones generadas" value={entities.length} />
-            </Card>
-          </Col>
-        </Row>
-      </div>
+      <Box ref={statsRef} className="stats-grid two-columns">
+        <MetricCard label="Entidades configuradas" value={entities.length} />
+        <MetricCard label="Opciones generadas" value={entities.length} />
+      </Box>
 
-      <div ref={formRef}>
+      <Box ref={formRef}>
         <EntityForm
           aiToggleButtonRef={aiToggleButtonRef}
           isAiSectionVisible={isAiSectionVisible}
@@ -223,10 +222,10 @@ export default function BusinessEntitiesPage() {
             setIsAiSectionVisible((currentValue) => !currentValue)
           }
         />
-      </div>
+      </Box>
 
       {isAiSectionVisible && (
-        <div ref={aiFormRef}>
+        <Box ref={aiFormRef}>
           <AiBusinessSchemaForm
             executedSchema={executedSchema}
             generatedPlan={generatedPlan}
@@ -236,25 +235,27 @@ export default function BusinessEntitiesPage() {
             onGeneratePlan={handleGeneratePlan}
             onRejectPlan={handleRejectPlan}
           />
-        </div>
+        </Box>
       )}
 
-      {error && <Alert title={error} type="error" showIcon />}
+      {error && <Alert severity="error">{error}</Alert>}
 
-      <div ref={tableRef}>
-        <Card title="Entidades configuradas" className="section-card">
-          <Spin
-            spinning={isLoading}
-            description="Cargando entidades de negocio..."
-          >
-            <EntitiesTable
-              deletingEntityId={deletingEntityId}
-              entities={entities}
-              onDelete={handleDelete}
-            />
-          </Spin>
+      <Box ref={tableRef}>
+        <Card className="section-card">
+          <CardHeader title="Entidades configuradas" />
+          <CardContent>
+            {isLoading ? (
+              <LoadingPanel label="Cargando entidades de negocio..." />
+            ) : (
+              <EntitiesTable
+                deletingEntityId={deletingEntityId}
+                entities={entities}
+                onDelete={handleDelete}
+              />
+            )}
+          </CardContent>
         </Card>
-      </div>
+      </Box>
     </section>
   );
 }

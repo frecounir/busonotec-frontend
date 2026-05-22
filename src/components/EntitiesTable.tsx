@@ -1,8 +1,20 @@
-import { DeleteOutlined, SettingOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Space, Table, Typography } from "antd";
-import type { TableColumnsType } from "antd";
-import { Link } from "react-router-dom";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
+import {
+  Button,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import type { BusinessEntity } from "../types";
+import ConfirmActionButton from "./ConfirmActionButton";
+import EmptyState from "./EmptyState";
 
 type EntitiesTableProps = {
   deletingEntityId?: string | null;
@@ -15,59 +27,62 @@ export default function EntitiesTable({
   entities,
   onDelete,
 }: EntitiesTableProps) {
-  const columns: TableColumnsType<BusinessEntity> = [
-    {
-      title: "Nombre",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Descripción",
-      dataIndex: "description",
-      key: "description",
-      render: (description?: string) =>
-        description || (
-          <Typography.Text type="secondary">Sin descripción</Typography.Text>
-        ),
-    },
-    {
-      title: "Acciones",
-      key: "actions",
-      render: (_, entity) => (
-        <Space wrap>
-          <Link to={`/entities/${entity.id}`}>
-            <Button icon={<SettingOutlined />} type="primary">
-              Gestionar
-            </Button>
-          </Link>
-          <Popconfirm
-            title="Eliminar entidad"
-            description="Se eliminará la entidad, sus campos y su tabla física."
-            okButtonProps={{
-              danger: true,
-              loading: deletingEntityId === entity.id,
-            }}
-            okText="Eliminar"
-            cancelText="Cancelar"
-            onConfirm={() => onDelete(entity)}
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Eliminar
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  if (entities.length === 0) {
+    return (
+      <EmptyState description="Aún no se han creado entidades de negocio." />
+    );
+  }
 
   return (
-    <Table<BusinessEntity>
-      columns={columns}
-      dataSource={entities}
-      locale={{ emptyText: "Aún no se han creado entidades de negocio." }}
-      pagination={false}
-      rowKey="id"
-      scroll={{ x: true }}
-    />
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Nombre</TableCell>
+            <TableCell>Descripción</TableCell>
+            <TableCell align="right">Acciones</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {entities.map((entity) => (
+            <TableRow key={entity.id} hover>
+              <TableCell>
+                <Typography sx={{ fontWeight: 800 }}>{entity.name}</Typography>
+              </TableCell>
+              <TableCell>
+                {entity.description || (
+                  <Typography color="text.secondary">
+                    Sin descripción
+                  </Typography>
+                )}
+              </TableCell>
+              <TableCell align="right">
+                <Stack
+                  direction="row"
+                  sx={{ gap: 1, justifyContent: "flex-end" }}
+                >
+                  <Button
+                    component={RouterLink}
+                    startIcon={<SettingsOutlined />}
+                    to={`/entities/${entity.id}`}
+                    variant="contained"
+                  >
+                    Gestionar
+                  </Button>
+                  <ConfirmActionButton
+                    description="Se eliminará la entidad, sus campos y su tabla física."
+                    icon={<DeleteOutlined />}
+                    isLoading={deletingEntityId === entity.id}
+                    label="Eliminar"
+                    title="Eliminar entidad"
+                    onConfirm={() => onDelete(entity)}
+                  />
+                </Stack>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

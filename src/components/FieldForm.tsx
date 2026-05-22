@@ -1,15 +1,17 @@
-import { PlusOutlined } from "@ant-design/icons";
+import AddOutlined from "@mui/icons-material/AddOutlined";
 import {
   Button,
   Card,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Select,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  FormControlLabel,
+  MenuItem,
+  Stack,
   Switch,
-} from "antd";
-import { useState } from "react";
+  TextField,
+} from "@mui/material";
+import { type FormEvent, useState } from "react";
 import type { CreateFieldInput } from "../types";
 import { FIELD_TYPE_LABELS, FIELD_TYPES } from "../utils/fieldMetadata";
 import { validateFieldDefinition } from "../utils/formValidation";
@@ -17,49 +19,54 @@ import {
   normalizeFieldValues,
   type FieldFormValues,
 } from "../utils/formNormalizers";
-import { applyValidationErrorsToForm } from "../utils/validationErrors";
+import {
+  getFieldError,
+  groupValidationErrors,
+} from "../utils/validationErrors";
 
 type FieldFormProps = {
   isSubmitting: boolean;
   onCreate: (data: Omit<CreateFieldInput, "businessEntityId">) => Promise<void>;
 };
 
-const validationFieldNames: (keyof FieldFormValues)[] = [
-  "name",
-  "type",
-  "required",
-  "minLength",
-  "maxLength",
-  "minValue",
-  "maxValue",
-  "minDate",
-  "maxDate",
-];
+const initialValues: FieldFormValues = {
+  name: "",
+  required: false,
+  type: "string",
+};
+
+function getOptionalNumberValue(value: number | null | undefined) {
+  return typeof value === "number" ? value : "";
+}
+
+function parseOptionalNumber(value: string) {
+  return value === "" ? undefined : Number(value);
+}
 
 export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
-  const [form] = Form.useForm<FieldFormValues>();
+  const [values, setValues] = useState<FieldFormValues>(initialValues);
+  const [errorsByField, setErrorsByField] = useState<Record<string, string[]>>(
+    {},
+  );
   const [isFormValid, setIsFormValid] = useState(false);
-  const selectedType = Form.useWatch("type", form) ?? "string";
 
-  const syncValidationErrors = (values: FieldFormValues) => {
-    const fieldValues = normalizeFieldValues(values);
+  const syncValidationErrors = (nextValues: FieldFormValues) => {
+    const fieldValues = normalizeFieldValues(nextValues);
     const validationErrors = validateFieldDefinition(fieldValues);
 
-    applyValidationErrorsToForm(form, validationFieldNames, validationErrors);
-
+    setErrorsByField(groupValidationErrors(validationErrors));
     setIsFormValid(validationErrors.length === 0);
 
     return validationErrors;
   };
 
-  const handleValuesChange = (
-    _changedValues: Partial<FieldFormValues>,
-    values: FieldFormValues,
-  ) => {
-    syncValidationErrors(values);
+  const updateValues = (nextValues: FieldFormValues) => {
+    setValues(nextValues);
+    syncValidationErrors(nextValues);
   };
 
-  const submit = async (values: FieldFormValues) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const fieldValues = normalizeFieldValues(values);
     const validationErrors = syncValidationErrors(values);
 
@@ -68,88 +75,166 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
     }
 
     await onCreate(fieldValues);
-    form.resetFields();
+    setValues(initialValues);
+    setErrorsByField({});
     setIsFormValid(false);
   };
 
   return (
-    <Card title="Agregar campo" className="section-card">
-      <Form
-        form={form}
-        initialValues={{ required: false, type: "string" }}
-        layout="vertical"
-        onValuesChange={handleValuesChange}
-        onFinish={submit}
-      >
-        <div className="field-base-grid">
-          <Form.Item label="Nombre" name="name">
-            <Input placeholder="correo_electronico" />
-          </Form.Item>
-
-          <Form.Item label="Tipo" name="type">
-            <Select
-              options={FIELD_TYPES.map((fieldType) => ({
-                label: FIELD_TYPE_LABELS[fieldType],
-                value: fieldType,
-              }))}
+    <Card className="section-card">
+      <CardHeader title="Agregar campo" />
+      <CardContent>
+        <Stack component="form" noValidate sx={{ gap: 2 }} onSubmit={submit}>
+          <div className="field-base-grid">
+            <TextField
+              error={Boolean(getFieldError(errorsByField, "name"))}
+              helperText={getFieldError(errorsByField, "name")}
+              label="Nombre"
+              placeholder="correo_electronico"
+              value={values.name}
+              onChange={(event) =>
+                updateValues({ ...values, name: event.target.value })
+              }
             />
-          </Form.Item>
 
-          <Form.Item
-            label="Obligatorio"
-            name="required"
-            valuePropName="checked"
-          >
-            <Switch checkedChildren="Sí" unCheckedChildren="No" />
-          </Form.Item>
+            <TextField
+              select
+              error={Boolean(getFieldError(errorsByField, "type"))}
+              helperText={getFieldError(errorsByField, "type")}
+              label="Tipo"
+              value={values.type}
+              onChange={(event) =>
+                updateValues({
+                  name: values.name,
+                  required: values.required,
+                  type: event.target.value as FieldFormValues["type"],
+                })
+              }
+            >
+              {FIELD_TYPES.map((fieldType) => (
+                <MenuItem key={fieldType} value={fieldType}>
+                  {FIELD_TYPE_LABELS[fieldType]}
+                </MenuItem>
+              ))}
+            </TextField>
 
-          <Form.Item className="form-action">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(values.required)}
+                  onChange={(event) =>
+                    updateValues({
+                      ...values,
+                      required: event.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Obligatorio"
+            />
+
             <Button
-              block
               disabled={!isFormValid || isSubmitting}
-              htmlType="submit"
-              icon={<PlusOutlined />}
-              loading={isSubmitting}
-              type="primary"
+              startIcon={
+                isSubmitting ? <CircularProgress size={16} /> : <AddOutlined />
+              }
+              type="submit"
+              variant="contained"
             >
               Agregar campo
             </Button>
-          </Form.Item>
-        </div>
-
-        {selectedType === "string" && (
-          <div className="field-validation-grid">
-            <Form.Item label="Longitud mínima" name="minLength">
-              <InputNumber min={0} precision={0} style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item label="Longitud máxima" name="maxLength">
-              <InputNumber min={0} precision={0} style={{ width: "100%" }} />
-            </Form.Item>
           </div>
-        )}
 
-        {selectedType === "number" && (
-          <div className="field-validation-grid">
-            <Form.Item label="Valor mínimo" name="minValue">
-              <InputNumber style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item label="Valor máximo" name="maxValue">
-              <InputNumber style={{ width: "100%" }} />
-            </Form.Item>
-          </div>
-        )}
+          {values.type === "string" && (
+            <div className="field-validation-grid">
+              <TextField
+                error={Boolean(getFieldError(errorsByField, "minLength"))}
+                helperText={getFieldError(errorsByField, "minLength")}
+                label="Longitud mínima"
+                type="number"
+                value={getOptionalNumberValue(values.minLength)}
+                onChange={(event) =>
+                  updateValues({
+                    ...values,
+                    minLength: parseOptionalNumber(event.target.value),
+                  })
+                }
+              />
+              <TextField
+                error={Boolean(getFieldError(errorsByField, "maxLength"))}
+                helperText={getFieldError(errorsByField, "maxLength")}
+                label="Longitud máxima"
+                type="number"
+                value={getOptionalNumberValue(values.maxLength)}
+                onChange={(event) =>
+                  updateValues({
+                    ...values,
+                    maxLength: parseOptionalNumber(event.target.value),
+                  })
+                }
+              />
+            </div>
+          )}
 
-        {selectedType === "date" && (
-          <div className="field-validation-grid">
-            <Form.Item label="Fecha mínima" name="minDate">
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item label="Fecha máxima" name="maxDate">
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-          </div>
-        )}
-      </Form>
+          {values.type === "number" && (
+            <div className="field-validation-grid">
+              <TextField
+                error={Boolean(getFieldError(errorsByField, "minValue"))}
+                helperText={getFieldError(errorsByField, "minValue")}
+                label="Valor mínimo"
+                type="number"
+                value={getOptionalNumberValue(values.minValue)}
+                onChange={(event) =>
+                  updateValues({
+                    ...values,
+                    minValue: parseOptionalNumber(event.target.value),
+                  })
+                }
+              />
+              <TextField
+                error={Boolean(getFieldError(errorsByField, "maxValue"))}
+                helperText={getFieldError(errorsByField, "maxValue")}
+                label="Valor máximo"
+                type="number"
+                value={getOptionalNumberValue(values.maxValue)}
+                onChange={(event) =>
+                  updateValues({
+                    ...values,
+                    maxValue: parseOptionalNumber(event.target.value),
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {values.type === "date" && (
+            <div className="field-validation-grid">
+              <TextField
+                error={Boolean(getFieldError(errorsByField, "minDate"))}
+                helperText={getFieldError(errorsByField, "minDate")}
+                label="Fecha mínima"
+                type="date"
+                value={values.minDate ?? ""}
+                slotProps={{ inputLabel: { shrink: true } }}
+                onChange={(event) =>
+                  updateValues({ ...values, minDate: event.target.value })
+                }
+              />
+              <TextField
+                error={Boolean(getFieldError(errorsByField, "maxDate"))}
+                helperText={getFieldError(errorsByField, "maxDate")}
+                label="Fecha máxima"
+                type="date"
+                value={values.maxDate ?? ""}
+                slotProps={{ inputLabel: { shrink: true } }}
+                onChange={(event) =>
+                  updateValues({ ...values, maxDate: event.target.value })
+                }
+              />
+            </div>
+          )}
+        </Stack>
+      </CardContent>
     </Card>
   );
 }

@@ -1,8 +1,19 @@
-import { DeleteOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Space, Table, Tag, Typography } from "antd";
-import type { TableColumnsType } from "antd";
+import DeleteOutlined from "@mui/icons-material/DeleteOutlined";
+import {
+  Chip,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import type { EntityField } from "../types";
 import { FIELD_TYPE_LABELS, getValidationLabels } from "../utils/fieldMetadata";
+import ConfirmActionButton from "./ConfirmActionButton";
+import EmptyState from "./EmptyState";
 
 type FieldsTableProps = {
   fields: EntityField[];
@@ -14,13 +25,13 @@ function renderValidationSummary(field: EntityField) {
   const validationLabels = getValidationLabels(field);
 
   return validationLabels.length > 0 ? (
-    <Space size={[0, 8]} wrap>
+    <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
       {validationLabels.map((label) => (
-        <Tag key={label}>{label}</Tag>
+        <Chip key={label} label={label} size="small" />
       ))}
-    </Space>
+    </Stack>
   ) : (
-    <Typography.Text type="secondary">Sin validaciones</Typography.Text>
+    <Typography color="text.secondary">Sin validaciones</Typography>
   );
 }
 
@@ -29,52 +40,52 @@ export default function FieldsTable({
   isDeleting,
   onDelete,
 }: FieldsTableProps) {
-  const columns: TableColumnsType<EntityField> = [
-    {
-      title: "Nombre",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Tipo",
-      dataIndex: "type",
-      key: "type",
-      render: (type: EntityField["type"]) => (
-        <Tag color="cyan">{FIELD_TYPE_LABELS[type]}</Tag>
-      ),
-    },
-    {
-      title: "Validaciones",
-      key: "validations",
-      render: (_, field) => renderValidationSummary(field),
-    },
-    {
-      title: "Acciones",
-      key: "actions",
-      render: (_, field) => (
-        <Popconfirm
-          title="Eliminar campo"
-          description="Este campo se eliminará de la entidad y también de la tabla física generada."
-          okButtonProps={{ danger: true, loading: isDeleting }}
-          okText="Eliminar"
-          onConfirm={() => onDelete(field)}
-        >
-          <Button danger icon={<DeleteOutlined />}>
-            Eliminar
-          </Button>
-        </Popconfirm>
-      ),
-    },
-  ];
+  if (fields.length === 0) {
+    return (
+      <EmptyState description="Aún no se han definido campos para esta entidad." />
+    );
+  }
 
   return (
-    <Table<EntityField>
-      columns={columns}
-      dataSource={fields}
-      locale={{ emptyText: "Aún no se han definido campos para esta entidad." }}
-      pagination={false}
-      rowKey="id"
-      scroll={{ x: true }}
-    />
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Nombre</TableCell>
+            <TableCell>Tipo</TableCell>
+            <TableCell>Validaciones</TableCell>
+            <TableCell align="right">Acciones</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {fields.map((field) => (
+            <TableRow key={field.id} hover>
+              <TableCell>
+                <Typography sx={{ fontWeight: 800 }}>{field.name}</Typography>
+              </TableCell>
+              <TableCell>
+                <Chip
+                  color="primary"
+                  label={FIELD_TYPE_LABELS[field.type]}
+                  size="small"
+                  variant="outlined"
+                />
+              </TableCell>
+              <TableCell>{renderValidationSummary(field)}</TableCell>
+              <TableCell align="right">
+                <ConfirmActionButton
+                  description="Este campo se eliminará de la entidad y también de la tabla física generada."
+                  icon={<DeleteOutlined />}
+                  isLoading={isDeleting}
+                  label="Eliminar"
+                  title="Eliminar campo"
+                  onConfirm={() => onDelete(field)}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

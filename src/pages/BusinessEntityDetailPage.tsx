@@ -1,15 +1,22 @@
-import { Alert, Card, Col, Flex, Row, Spin, Statistic, Typography } from "antd";
-import type { TourProps } from "antd";
-import { useParams } from "react-router-dom";
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import FieldForm from "../components/FieldForm";
+import FieldsTable from "../components/FieldsTable";
+import LoadingPanel from "../components/LoadingPanel";
+import MetricCard from "../components/MetricCard";
+import PageGuide, { type GuideStep } from "../components/PageGuide";
 import { getBusinessEntityConfiguration } from "../services/businessEntityConfigurationService";
 import { createField, deleteField } from "../services/fieldService";
-import FieldsTable from "../components/FieldsTable";
-import FieldForm from "../components/FieldForm";
-import PageGuide from "../components/PageGuide";
 import type { BusinessEntity, CreateFieldInput, EntityField } from "../types";
-
-const { Paragraph, Text, Title } = Typography;
 
 export default function BusinessEntityDetailPage() {
   const { id } = useParams();
@@ -23,30 +30,30 @@ export default function BusinessEntityDetailPage() {
   const statsRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const steps: TourProps["steps"] = [
+  const steps: GuideStep[] = [
     {
       title: "Revisa la entidad",
       description:
         "Aquí se muestra la entidad que estás configurando. Piensa en ella como una carpeta o categoría principal donde se guardará información del negocio. La descripción ayuda a que otras personas entiendan para qué existe.",
-      target: () => summaryRef.current as HTMLElement,
+      target: () => summaryRef.current,
     },
     {
       title: "Mide la configuración",
       description:
         "Estos indicadores muestran cuántos datos se han definido para la entidad. Mientras más campos agregues, más completa será la información que se podrá registrar después en la pantalla generada.",
-      target: () => statsRef.current as HTMLElement,
+      target: () => statsRef.current,
     },
     {
       title: "Agrega campos dinámicos",
       description:
         "Un campo es un dato específico que quieres guardar. Por ejemplo, para Estudiantes podrías crear nombre como Texto, puntaje como Número, fecha_ingreso como Fecha y activo como Verdadero/Falso. También puedes definir si es obligatorio y agregar reglas simples como longitudes, rangos numéricos o fechas permitidas.",
-      target: () => formRef.current as HTMLElement,
+      target: () => formRef.current,
     },
     {
       title: "Valida la estructura",
       description:
         "Esta tabla funciona como una vista previa de la estructura de la entidad. Si aquí aparecen los campos correctos, la pantalla generada de gestión podrá pedir y mostrar la información adecuada para cada registro. También puedes eliminar un campo si ya no debe formar parte de la información que se guarda.",
-      target: () => tableRef.current as HTMLElement,
+      target: () => tableRef.current,
     },
   ];
 
@@ -132,66 +139,67 @@ export default function BusinessEntityDetailPage() {
 
   return (
     <section className="page-stack">
-      {error && <Alert title={error} type="error" showIcon />}
+      {error && <Alert severity="error">{error}</Alert>}
 
-      <Spin
-        spinning={isLoading}
-        description="Cargando configuración de la entidad..."
-      >
-        <div className="page-stack">
-          <div ref={summaryRef}>
+      {isLoading ? (
+        <LoadingPanel label="Cargando configuración de la entidad..." />
+      ) : (
+        <>
+          <Box ref={summaryRef}>
             <Card className="page-card">
-              <Flex align="flex-start" gap={16} justify="space-between" wrap>
-                <div>
-                  <Text type="secondary" strong>
-                    Entidad de negocio
-                  </Text>
-                  <Title level={2}>
-                    {entity?.name || "Detalle de la entidad"}
-                  </Title>
-                </div>
-                <PageGuide steps={steps} />
-              </Flex>
-              <Paragraph>
-                {entity?.description ||
-                  "No se ha definido una descripción para esta entidad."}
-              </Paragraph>
+              <CardContent>
+                <Stack
+                  direction="row"
+                  sx={{
+                    alignItems: "flex-start",
+                    gap: 2,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Box>
+                    <Typography color="text.secondary" sx={{ fontWeight: 800 }}>
+                      Entidad de negocio
+                    </Typography>
+                    <Typography variant="h2">
+                      {entity?.name || "Detalle de la entidad"}
+                    </Typography>
+                  </Box>
+                  <PageGuide steps={steps} />
+                </Stack>
+                <Typography color="text.secondary" sx={{ mt: 1.5 }}>
+                  {entity?.description ||
+                    "No se ha definido una descripción para esta entidad."}
+                </Typography>
+              </CardContent>
             </Card>
-          </div>
+          </Box>
 
-          <div ref={statsRef}>
-            <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12}>
-                <Card className="insight-card">
-                  <Statistic title="Campos definidos" value={fields.length} />
-                </Card>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Card className="insight-card">
-                  <Statistic
-                    title="Módulo generado"
-                    value={entity ? "Listo" : "Pendiente"}
-                  />
-                </Card>
-              </Col>
-            </Row>
-          </div>
+          <Box ref={statsRef} className="stats-grid two-columns">
+            <MetricCard label="Campos definidos" value={fields.length} />
+            <MetricCard
+              label="Módulo generado"
+              value={entity ? "Listo" : "Pendiente"}
+            />
+          </Box>
 
-          <div ref={formRef}>
+          <Box ref={formRef}>
             <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
-          </div>
+          </Box>
 
-          <div ref={tableRef}>
-            <Card title="Campos definidos" className="section-card">
-              <FieldsTable
-                fields={fields}
-                isDeleting={isDeleting}
-                onDelete={handleDeleteField}
-              />
+          <Box ref={tableRef}>
+            <Card className="section-card">
+              <CardHeader title="Campos definidos" />
+              <CardContent>
+                <FieldsTable
+                  fields={fields}
+                  isDeleting={isDeleting}
+                  onDelete={handleDeleteField}
+                />
+              </CardContent>
             </Card>
-          </div>
-        </div>
-      </Spin>
+          </Box>
+        </>
+      )}
     </section>
   );
 }
