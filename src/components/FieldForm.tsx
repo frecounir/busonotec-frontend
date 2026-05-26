@@ -11,9 +11,14 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
-import { type FormEvent, useState } from "react";
-import type { CreateFieldInput } from "../types";
-import { FIELD_TYPE_LABELS, FIELD_TYPES } from "../utils/fieldMetadata";
+import { type SubmitEvent, useState } from "react";
+import type { BusinessEntity, CreateFieldInput } from "../types";
+import {
+  FIELD_TYPE_LABELS,
+  FIELD_TYPES,
+  RELATIONSHIP_TYPE_LABELS,
+  RELATIONSHIP_TYPES,
+} from "../utils/fieldMetadata";
 import { validateFieldDefinition } from "../utils/formValidation";
 import {
   normalizeFieldValues,
@@ -25,6 +30,7 @@ import {
 } from "../utils/validationErrors";
 
 type FieldFormProps = {
+  businessEntities: BusinessEntity[];
   isSubmitting: boolean;
   onCreate: (data: Omit<CreateFieldInput, "businessEntityId">) => Promise<void>;
 };
@@ -43,7 +49,11 @@ function parseOptionalNumber(value: string) {
   return value === "" ? undefined : Number(value);
 }
 
-export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
+export default function FieldForm({
+  businessEntities,
+  isSubmitting,
+  onCreate,
+}: FieldFormProps) {
   const [values, setValues] = useState<FieldFormValues>(initialValues);
   const [errorsByField, setErrorsByField] = useState<Record<string, string[]>>(
     {},
@@ -65,7 +75,7 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
     syncValidationErrors(nextValues);
   };
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const fieldValues = normalizeFieldValues(values);
     const validationErrors = syncValidationErrors(values);
@@ -108,6 +118,10 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
                   name: values.name,
                   required: values.required,
                   type: event.target.value as FieldFormValues["type"],
+                  relationshipType:
+                    event.target.value === "relationship"
+                      ? "many_to_one"
+                      : undefined,
                 })
               }
             >
@@ -231,6 +245,57 @@ export default function FieldForm({ isSubmitting, onCreate }: FieldFormProps) {
                   updateValues({ ...values, maxDate: event.target.value })
                 }
               />
+            </div>
+          )}
+
+          {values.type === "relationship" && (
+            <div className="field-validation-grid">
+              <TextField
+                select
+                error={Boolean(
+                  getFieldError(errorsByField, "referencedBusinessEntityId"),
+                )}
+                helperText={getFieldError(
+                  errorsByField,
+                  "referencedBusinessEntityId",
+                )}
+                label="Entidad relacionada"
+                value={values.referencedBusinessEntityId ?? ""}
+                onChange={(event) =>
+                  updateValues({
+                    ...values,
+                    referencedBusinessEntityId: event.target.value,
+                  })
+                }
+              >
+                {businessEntities.map((entity) => (
+                  <MenuItem key={entity.id} value={entity.id}>
+                    {entity.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                error={Boolean(
+                  getFieldError(errorsByField, "relationshipType"),
+                )}
+                helperText={getFieldError(errorsByField, "relationshipType")}
+                label="Cardinalidad"
+                value={values.relationshipType ?? "many_to_one"}
+                onChange={(event) =>
+                  updateValues({
+                    ...values,
+                    relationshipType: event.target
+                      .value as FieldFormValues["relationshipType"],
+                  })
+                }
+              >
+                {RELATIONSHIP_TYPES.map((relationshipType) => (
+                  <MenuItem key={relationshipType} value={relationshipType}>
+                    {RELATIONSHIP_TYPE_LABELS[relationshipType]}
+                  </MenuItem>
+                ))}
+              </TextField>
             </div>
           )}
         </Stack>

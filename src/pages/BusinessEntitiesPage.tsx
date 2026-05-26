@@ -23,6 +23,10 @@ import EntityForm from "../components/EntityForm";
 import LoadingPanel from "../components/LoadingPanel";
 import MetricCard from "../components/MetricCard";
 import PageGuide, { type GuideStep } from "../components/PageGuide";
+import {
+  getRelationshipReferencesByEntityId,
+  type RelationshipReferencesByEntityId,
+} from "../services/businessEntityConfigurationService";
 import type {
   AiBusinessSchemaPlan,
   AiBusinessSchemaResponse,
@@ -30,9 +34,14 @@ import type {
   CreateEntityInput,
 } from "../types";
 import { notifyBusinessEntitiesChanged } from "../utils/businessEntityEvents";
+import { deleteField } from "../services/fieldService";
 
 export default function BusinessEntitiesPage() {
   const [entities, setEntities] = useState<BusinessEntity[]>([]);
+  const [
+    relationshipReferencesByEntityId,
+    setRelationshipReferencesByEntityId,
+  ] = useState<RelationshipReferencesByEntityId>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
@@ -88,7 +97,10 @@ export default function BusinessEntitiesPage() {
     setIsLoading(true);
     try {
       const entitiesResponse = await getEntities();
+      const referencesResponse =
+        await getRelationshipReferencesByEntityId(entitiesResponse);
       setEntities(entitiesResponse);
+      setRelationshipReferencesByEntityId(referencesResponse);
     } finally {
       setIsLoading(false);
     }
@@ -151,6 +163,18 @@ export default function BusinessEntitiesPage() {
     try {
       setError(null);
       setDeletingEntityId(entity.id);
+      const latestEntities = await getEntities();
+      const latestRelationshipReferences =
+        await getRelationshipReferencesByEntityId(latestEntities);
+      const relationshipReferences =
+        latestRelationshipReferences[entity.id] ?? [];
+
+      setRelationshipReferencesByEntityId(latestRelationshipReferences);
+      await Promise.all(
+        relationshipReferences.map((reference) =>
+          deleteField(reference.field.id),
+        ),
+      );
       await deleteEntity(entity.id);
       notifyBusinessEntitiesChanged();
       await load();
@@ -165,9 +189,16 @@ export default function BusinessEntitiesPage() {
     let isActive = true;
 
     getEntities()
-      .then((entitiesResponse) => {
+      .then(async (entitiesResponse) => {
+        const referencesResponse =
+          await getRelationshipReferencesByEntityId(entitiesResponse);
+
+        return { entitiesResponse, referencesResponse };
+      })
+      .then(({ entitiesResponse, referencesResponse }) => {
         if (isActive) {
           setEntities(entitiesResponse);
+          setRelationshipReferencesByEntityId(referencesResponse);
         }
       })
       .catch(() => {
@@ -250,6 +281,9 @@ export default function BusinessEntitiesPage() {
               <EntitiesTable
                 deletingEntityId={deletingEntityId}
                 entities={entities}
+                relationshipReferencesByEntityId={
+                  relationshipReferencesByEntityId
+                }
                 onDelete={handleDelete}
               />
             )}

@@ -15,12 +15,16 @@ import LoadingPanel from "../components/LoadingPanel";
 import MetricCard from "../components/MetricCard";
 import PageGuide, { type GuideStep } from "../components/PageGuide";
 import { getBusinessEntityConfiguration } from "../services/businessEntityConfigurationService";
+import { getEntities } from "../services/entityService";
 import { createField, deleteField } from "../services/fieldService";
 import type { BusinessEntity, CreateFieldInput, EntityField } from "../types";
 
 export default function BusinessEntityDetailPage() {
   const { id } = useParams();
   const [entity, setEntity] = useState<BusinessEntity | null>(null);
+  const [businessEntities, setBusinessEntities] = useState<BusinessEntity[]>(
+    [],
+  );
   const [fields, setFields] = useState<EntityField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -65,9 +69,13 @@ export default function BusinessEntityDetailPage() {
     setError(null);
     setIsLoading(true);
     try {
-      const configuration = await getBusinessEntityConfiguration(id);
+      const [configuration, entities] = await Promise.all([
+        getBusinessEntityConfiguration(id),
+        getEntities(),
+      ]);
       setEntity(configuration.entity);
       setFields(configuration.fields);
+      setBusinessEntities(entities);
     } finally {
       setIsLoading(false);
     }
@@ -112,11 +120,12 @@ export default function BusinessEntityDetailPage() {
 
     let isActive = true;
 
-    getBusinessEntityConfiguration(id)
-      .then((configuration) => {
+    Promise.all([getBusinessEntityConfiguration(id), getEntities()])
+      .then(([configuration, entities]) => {
         if (isActive) {
           setEntity(configuration.entity);
           setFields(configuration.fields);
+          setBusinessEntities(entities);
         }
       })
       .catch(() => {
@@ -183,7 +192,11 @@ export default function BusinessEntityDetailPage() {
           </Box>
 
           <Box ref={formRef}>
-            <FieldForm isSubmitting={isCreating} onCreate={handleCreateField} />
+            <FieldForm
+              businessEntities={businessEntities}
+              isSubmitting={isCreating}
+              onCreate={handleCreateField}
+            />
           </Box>
 
           <Box ref={tableRef}>
@@ -191,6 +204,7 @@ export default function BusinessEntityDetailPage() {
               <CardHeader title="Campos definidos" />
               <CardContent>
                 <FieldsTable
+                  businessEntities={businessEntities}
                   fields={fields}
                   isDeleting={isDeleting}
                   onDelete={handleDeleteField}

@@ -138,3 +138,34 @@ export function formatRecordValue(value: unknown) {
 
   return String(value);
 }
+
+function getShortRecordId(record: EntityRecord) {
+  return record.id.slice(0, 8);
+}
+
+export function getRecordDisplayLabel(
+  record: EntityRecord,
+  fields: EntityField[],
+) {
+  const preferredField = fields.find((field) =>
+    ["nombre", "name", "titulo", "title", "codigo", "code"].includes(
+      field.name.toLowerCase(),
+    ),
+  );
+  const fallbackField =
+    preferredField ??
+    fields.find((field) => field.type === "string") ??
+    fields.find((field) => field.type !== "relationship");
+
+  if (!fallbackField) {
+    return `Registro ${getShortRecordId(record)}`;
+  }
+
+  const value = getRecordFieldValue(record, fallbackField.name);
+
+  if (isEmptyRecordValue(value)) {
+    return `Registro ${getShortRecordId(record)}`;
+  }
+
+  return String(formatRecordValue(value));
+}

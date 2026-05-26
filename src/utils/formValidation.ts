@@ -55,6 +55,12 @@ const optionalDateSchema = z
   .regex(ISO_DATE_PATTERN, { error: "Usa una fecha válida." })
   .optional();
 
+const relationshipTypeSchema = z
+  .enum(["many_to_one", "one_to_one"], {
+    error: "Selecciona una cardinalidad válida.",
+  })
+  .optional();
+
 const createFieldSchema = z
   .object({
     businessEntityId: z.string().optional(),
@@ -65,12 +71,32 @@ const createFieldSchema = z
     minLength: optionalIntegerSchema,
     minValue: optionalNumberSchema,
     name: fieldNameSchema,
+    referencedBusinessEntityId: z.string().optional(),
     required: z.boolean().optional(),
-    type: z.enum(["string", "number", "boolean", "date"], {
+    relationshipType: relationshipTypeSchema,
+    type: z.enum(["string", "number", "boolean", "date", "relationship"], {
       error: "Selecciona un tipo válido.",
     }),
   })
   .superRefine((field, context) => {
+    if (field.type === "relationship") {
+      if (!field.relationshipType) {
+        context.addIssue({
+          code: "custom",
+          message: "Selecciona la cardinalidad de la relación.",
+          path: ["relationshipType"],
+        });
+      }
+
+      if (!field.referencedBusinessEntityId) {
+        context.addIssue({
+          code: "custom",
+          message: "Selecciona la entidad relacionada.",
+          path: ["referencedBusinessEntityId"],
+        });
+      }
+    }
+
     if (
       field.type === "string" &&
       field.minLength !== undefined &&
@@ -209,6 +235,19 @@ function buildBooleanRecordSchema(field: EntityField) {
   return field.required ? schema : optionalValue(schema);
 }
 
+function buildRelationshipRecordSchema(field: EntityField) {
+  const schema = z
+    .string({
+      error: field.required
+        ? `Selecciona ${field.name}.`
+        : `${field.name} no es válido.`,
+    })
+    .trim()
+    .min(1, { error: `Selecciona ${field.name}.` });
+
+  return field.required ? schema : optionalValue(schema);
+}
+
 function buildRecordFieldSchema(field: EntityField) {
   if (field.type === "number") {
     return buildNumberRecordSchema(field);
@@ -220,6 +259,10 @@ function buildRecordFieldSchema(field: EntityField) {
 
   if (field.type === "date") {
     return buildDateRecordSchema(field);
+  }
+
+  if (field.type === "relationship") {
+    return buildRelationshipRecordSchema(field);
   }
 
   return buildStringRecordSchema(field);

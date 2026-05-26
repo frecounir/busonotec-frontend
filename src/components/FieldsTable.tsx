@@ -10,19 +10,42 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import type { EntityField } from "../types";
+import type { BusinessEntity, EntityField } from "../types";
 import { FIELD_TYPE_LABELS, getValidationLabels } from "../utils/fieldMetadata";
 import ConfirmActionButton from "./ConfirmActionButton";
 import EmptyState from "./EmptyState";
 
 type FieldsTableProps = {
+  businessEntities: BusinessEntity[];
   fields: EntityField[];
   isDeleting: boolean;
   onDelete: (field: EntityField) => Promise<void>;
 };
 
-function renderValidationSummary(field: EntityField) {
+function getBusinessEntityName(
+  businessEntities: BusinessEntity[],
+  entityId?: string | null,
+) {
+  return (
+    businessEntities.find((entity) => entity.id === entityId)?.name ??
+    "Entidad no disponible"
+  );
+}
+
+function renderValidationSummary(
+  field: EntityField,
+  businessEntities: BusinessEntity[],
+) {
   const validationLabels = getValidationLabels(field);
+
+  if (field.type === "relationship") {
+    validationLabels.push(
+      `Destino ${getBusinessEntityName(
+        businessEntities,
+        field.referencedBusinessEntityId,
+      )}`,
+    );
+  }
 
   return validationLabels.length > 0 ? (
     <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
@@ -36,6 +59,7 @@ function renderValidationSummary(field: EntityField) {
 }
 
 export default function FieldsTable({
+  businessEntities,
   fields,
   isDeleting,
   onDelete,
@@ -71,7 +95,9 @@ export default function FieldsTable({
                   variant="outlined"
                 />
               </TableCell>
-              <TableCell>{renderValidationSummary(field)}</TableCell>
+              <TableCell>
+                {renderValidationSummary(field, businessEntities)}
+              </TableCell>
               <TableCell align="right">
                 <ConfirmActionButton
                   description="Este campo se eliminará de la entidad y también de la tabla física generada."

@@ -18,8 +18,12 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreOutlined from "@mui/icons-material/ExpandMoreOutlined";
-import { type FormEvent, useEffect, useRef, useState } from "react";
-import type { AiBusinessSchemaPlan, AiBusinessSchemaResponse } from "../types";
+import { type SubmitEvent, useEffect, useRef, useState } from "react";
+import type {
+  AiBusinessSchemaPlan,
+  AiBusinessSchemaResponse,
+  EntityField,
+} from "../types";
 import {
   FIELD_TYPE_LABELS,
   getValidationLabels,
@@ -42,6 +46,43 @@ function renderValidationTags(field: FieldMetadata) {
   ));
 }
 
+function renderAiRelationshipTarget(field: {
+  referencedEntityName?: string | null;
+  type: string;
+}) {
+  if (field.type !== "relationship" || !field.referencedEntityName) {
+    return null;
+  }
+
+  return (
+    <Chip
+      label={`Destino ${field.referencedEntityName}`}
+      size="small"
+      variant="outlined"
+    />
+  );
+}
+
+function renderCreatedRelationshipTarget(
+  field: EntityField,
+  entityNamesById: Record<string, string>,
+) {
+  if (field.type !== "relationship" || !field.referencedBusinessEntityId) {
+    return null;
+  }
+
+  return (
+    <Chip
+      label={`Destino ${
+        entityNamesById[field.referencedBusinessEntityId] ??
+        "Entidad no disponible"
+      }`}
+      size="small"
+      variant="outlined"
+    />
+  );
+}
+
 export default function AiBusinessSchemaForm({
   executedSchema,
   generatedPlan,
@@ -54,6 +95,15 @@ export default function AiBusinessSchemaForm({
   const [prompt, setPrompt] = useState("");
   const generatedPlanRef = useRef<HTMLDivElement>(null);
   const executedSchemaRef = useRef<HTMLDivElement>(null);
+  const createdEntityNamesById =
+    executedSchema?.createdBusinessEntities.reduce<Record<string, string>>(
+      (namesById, createdEntity) => {
+        namesById[createdEntity.businessEntity.id] =
+          createdEntity.businessEntity.name;
+        return namesById;
+      },
+      {},
+    ) ?? {};
 
   useEffect(() => {
     const target = generatedPlan
@@ -73,7 +123,7 @@ export default function AiBusinessSchemaForm({
     return () => window.cancelAnimationFrame(animationFrameId);
   }, [executedSchema, generatedPlan]);
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     await onGeneratePlan(prompt.trim());
     setPrompt("");
@@ -87,14 +137,16 @@ export default function AiBusinessSchemaForm({
           <Typography color="text.secondary">
             Describe en palabras simples qué información necesita gestionar tu
             negocio. El agente generativo propondrá entidades y campos, y el
-            backend las creará automáticamente.
+            backend las creará automáticamente junto con las relaciones que
+            hagan falta.
           </Typography>
 
           <Alert severity="info">
             Ejemplo: crea entidades para estudiantes y actividades. Los
             estudiantes necesitan nombre obligatorio, correo y activo. Las
             actividades necesitan título de máximo 120 caracteres, fecha de
-            inicio desde 2026-01-01 y duración entre 1 y 8.
+            inicio desde 2026-01-01 y duración entre 1 y 8. Cada estudiante se
+            relaciona con una actividad.
           </Alert>
 
           <Stack component="form" noValidate sx={{ gap: 2 }} onSubmit={submit}>
@@ -163,6 +215,7 @@ export default function AiBusinessSchemaForm({
                               size="small"
                               variant="outlined"
                             />
+                            {renderAiRelationshipTarget(field)}
                             {renderValidationTags(field)}
                           </Stack>
                         </ListItem>
@@ -223,6 +276,10 @@ export default function AiBusinessSchemaForm({
                               size="small"
                               variant="outlined"
                             />
+                            {renderCreatedRelationshipTarget(
+                              field,
+                              createdEntityNamesById,
+                            )}
                             {renderValidationTags(field)}
                           </Stack>
                         </ListItem>

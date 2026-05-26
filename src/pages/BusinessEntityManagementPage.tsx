@@ -15,7 +15,10 @@ import EntityRecordsTable from "../components/EntityRecordsTable";
 import LoadingPanel from "../components/LoadingPanel";
 import MetricCard from "../components/MetricCard";
 import PageGuide, { type GuideStep } from "../components/PageGuide";
-import { getBusinessEntityManagementData } from "../services/businessEntityConfigurationService";
+import {
+  getBusinessEntityManagementData,
+  type RelationshipOptionsByFieldId,
+} from "../services/businessEntityConfigurationService";
 import {
   createEntityRecord,
   deleteEntityRecord,
@@ -33,6 +36,8 @@ export default function BusinessEntityManagementPage() {
   const [entity, setEntity] = useState<BusinessEntity | null>(null);
   const [fields, setFields] = useState<EntityField[]>([]);
   const [records, setRecords] = useState<EntityRecord[]>([]);
+  const [relationshipOptionsByFieldId, setRelationshipOptionsByFieldId] =
+    useState<RelationshipOptionsByFieldId>({});
   const [editingRecord, setEditingRecord] = useState<EntityRecord | null>(null);
   const [isLoadingConfiguration, setIsLoadingConfiguration] = useState(
     Boolean(entityId),
@@ -80,6 +85,9 @@ export default function BusinessEntityManagementPage() {
       setEntity(managementData.entity);
       setFields(managementData.fields);
       setRecords(managementData.records);
+      setRelationshipOptionsByFieldId(
+        managementData.relationshipOptionsByFieldId,
+      );
     } catch {
       setError("No fue posible cargar los datos de la entidad seleccionada.");
     } finally {
@@ -146,6 +154,9 @@ export default function BusinessEntityManagementPage() {
           setEntity(managementData.entity);
           setFields(managementData.fields);
           setRecords(managementData.records);
+          setRelationshipOptionsByFieldId(
+            managementData.relationshipOptionsByFieldId,
+          );
           setEditingRecord(null);
         }
       })
@@ -229,6 +240,8 @@ export default function BusinessEntityManagementPage() {
                 editingRecord={editingRecord}
                 fields={fields}
                 isSubmitting={isSaving}
+                relationshipOptionsByFieldId={relationshipOptionsByFieldId}
+                records={records}
                 onCancelEdit={() => setEditingRecord(null)}
                 onSubmit={handleSaveRecord}
               />
@@ -244,6 +257,7 @@ export default function BusinessEntityManagementPage() {
                 <EntityRecordsTable
                   fields={fields}
                   isDeleting={isDeleting}
+                  relationshipOptionsByFieldId={relationshipOptionsByFieldId}
                   onDelete={handleDeleteRecord}
                   onEdit={setEditingRecord}
                   records={records}

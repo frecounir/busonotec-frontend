@@ -9,7 +9,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { type FormEvent, type RefObject, useState } from "react";
+import { type RefObject, type SubmitEvent, useState } from "react";
 import type { CreateEntityInput } from "../types";
 import { validateBusinessEntityDefinition } from "../utils/formValidation";
 import { normalizeEntityValues } from "../utils/formNormalizers";
@@ -60,7 +60,7 @@ export default function EntityForm({
     syncValidationErrors(nextValues);
   };
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const entityValues = normalizeEntityValues(values);
     const validationErrors = syncValidationErrors(values);

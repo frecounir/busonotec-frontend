@@ -9,10 +9,12 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
-import { type FormEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
+import type { RelationshipOptionsByFieldId } from "../services/businessEntityConfigurationService";
 import type { EntityField, EntityRecord, EntityRecordPayload } from "../types";
 import { validateRecordValues } from "../utils/formValidation";
 import {
+  getRecordFieldValue,
   getInitialRecordFieldValue,
   normalizeRecordValues,
   type RecordFormValues,
@@ -21,11 +23,14 @@ import {
   getFieldError,
   groupValidationErrors,
 } from "../utils/validationErrors";
+import RelationshipRecordSelect from "./RelationshipRecordSelect";
 
 type EntityRecordFormProps = {
   editingRecord: EntityRecord | null;
   fields: EntityField[];
   isSubmitting: boolean;
+  relationshipOptionsByFieldId: RelationshipOptionsByFieldId;
+  records: EntityRecord[];
   onCancelEdit: () => void;
   onSubmit: (values: EntityRecordPayload) => Promise<void>;
 };
@@ -48,10 +53,36 @@ function parseNumberValue(value: string) {
   return value === "" ? undefined : Number(value);
 }
 
+function getUnavailableRelationshipRecordIds(
+  field: EntityField,
+  records: EntityRecord[],
+  editingRecord: EntityRecord | null,
+) {
+  if (field.relationshipType !== "one_to_one") {
+    return new Set<string>();
+  }
+
+  return records.reduce<Set<string>>((unavailableRecordIds, record) => {
+    if (record.id === editingRecord?.id) {
+      return unavailableRecordIds;
+    }
+
+    const relationshipValue = getRecordFieldValue(record, field.name);
+
+    if (typeof relationshipValue === "string") {
+      unavailableRecordIds.add(relationshipValue);
+    }
+
+    return unavailableRecordIds;
+  }, new Set<string>());
+}
+
 export default function EntityRecordForm({
   editingRecord,
   fields,
   isSubmitting,
+  relationshipOptionsByFieldId,
+  records,
   onCancelEdit,
   onSubmit,
 }: EntityRecordFormProps) {
@@ -92,7 +123,7 @@ export default function EntityRecordForm({
     syncValidationErrors(nextValues);
   };
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const validationErrors = syncValidationErrors(values);
 
@@ -179,6 +210,24 @@ export default function EntityRecordForm({
                   onChange={(event) =>
                     updateField(field.name, event.target.value)
                   }
+                />
+              );
+            }
+
+            if (field.type === "relationship") {
+              return (
+                <RelationshipRecordSelect
+                  key={field.id}
+                  error={fieldError}
+                  field={field}
+                  options={relationshipOptionsByFieldId[field.id]}
+                  unavailableRecordIds={getUnavailableRelationshipRecordIds(
+                    field,
+                    records,
+                    editingRecord,
+                  )}
+                  value={getTextFieldValue(value).toString()}
+                  onChange={(nextValue) => updateField(field.name, nextValue)}
                 />
               );
             }

@@ -1,22 +1,41 @@
-import type { EntityFieldType, EntityFieldValidation } from "../types";
+import type {
+  EntityFieldType,
+  EntityFieldValidation,
+  EntityRelationshipDefinition,
+  EntityRelationshipType,
+} from "../types";
 
 export type FieldMetadata = {
   type: EntityFieldType;
-} & EntityFieldValidation;
+} & EntityFieldValidation &
+  Pick<EntityRelationshipDefinition, "relationshipType">;
 
 export const FIELD_TYPES: EntityFieldType[] = [
   "string",
   "number",
   "boolean",
   "date",
+  "relationship",
 ];
 
 export const FIELD_TYPE_LABELS: Record<EntityFieldType, string> = {
   boolean: "Verdadero/Falso",
   date: "Fecha",
   number: "Número",
+  relationship: "Relación",
   string: "Texto",
 };
+
+export const RELATIONSHIP_TYPES: EntityRelationshipType[] = [
+  "many_to_one",
+  "one_to_one",
+];
+
+export const RELATIONSHIP_TYPE_LABELS: Record<EntityRelationshipType, string> =
+  {
+    many_to_one: "Muchos a uno",
+    one_to_one: "Uno a uno",
+  };
 
 function hasNumberValidation(
   value: number | null | undefined,
@@ -59,6 +78,10 @@ export function getValidationLabels(field: FieldMetadata) {
     if (field.maxDate) {
       labels.push(`Hasta ${field.maxDate}`);
     }
+  }
+
+  if (field.type === "relationship" && field.relationshipType) {
+    labels.push(RELATIONSHIP_TYPE_LABELS[field.relationshipType]);
   }
 
   return labels;

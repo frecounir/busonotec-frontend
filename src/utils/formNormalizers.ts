@@ -59,5 +59,14 @@ export function normalizeFieldValues(values: FieldFormValues) {
     };
   }
 
+  if (values.type === "relationship") {
+    return {
+      ...base,
+      referencedBusinessEntityId:
+        values.referencedBusinessEntityId?.trim() || undefined,
+      relationshipType: values.relationshipType ?? "many_to_one",
+    };
+  }
+
   return base;
 }

@@ -1,4 +1,11 @@
-export type EntityFieldType = "string" | "number" | "boolean" | "date";
+export type EntityFieldType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "date"
+  | "relationship";
+
+export type EntityRelationshipType = "many_to_one" | "one_to_one";
 
 export type EntityFieldValidation = {
   required?: boolean;
@@ -8,6 +15,11 @@ export type EntityFieldValidation = {
   maxValue?: number | null;
   minDate?: string | null;
   maxDate?: string | null;
+};
+
+export type EntityRelationshipDefinition = {
+  relationshipType?: EntityRelationshipType | null;
+  referencedBusinessEntityId?: string | null;
 };
 
 export type BusinessEntity = {
@@ -26,13 +38,15 @@ export type EntityField = {
   name: string;
   type: EntityFieldType;
   businessEntityId: string;
-} & EntityFieldValidation;
+} & EntityFieldValidation &
+  EntityRelationshipDefinition;
 
 export type CreateFieldInput = {
   name: string;
   type: EntityFieldType;
   businessEntityId: string;
-} & EntityFieldValidation;
+} & EntityFieldValidation &
+  EntityRelationshipDefinition;
 
 export type EntityRecordValue = string | number | boolean | null;
 
@@ -47,7 +61,9 @@ export type EntityRecord = EntityRecordPayload & {
 export type AiEntityFieldDefinition = {
   name: string;
   type: EntityFieldType;
-} & EntityFieldValidation;
+  referencedEntityName?: string | null;
+} & EntityFieldValidation &
+  Pick<EntityRelationshipDefinition, "relationshipType">;
 
 export type AiBusinessEntityDefinition = {
   name: string;
